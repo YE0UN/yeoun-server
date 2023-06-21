@@ -2,37 +2,41 @@ const { Router } = require('express');
 const router = Router();
 const hashPassword = require('../utils/hash-password');
 const User = require('../models/User');
+const asyncHandler = require('../utils/async-handler');
 
-router.post('/signup', async (req, res, next) => {
+router.post('/signup', asyncHandler(async (req, res) => {
   const {email, password, nickname} = req.body;
   const hashedPassword = hashPassword(password);
+
   const user = await User.create({
     email,
     password: hashedPassword,
     nickname,
   });
-
-  console.log('회원가입 완료', user);
   
-  res.send({message: '회원가입을 완료했습니다.'})
-});
+  res.json({message: '회원가입을 완료했습니다.'})
+}));
 
-router.post('/signin', async (req, res, next) => {
+router.post('/signin', asyncHandler(async (req, res) => {
   const {email, password} = req.body;
   const user = User.findOne({ email });
+  
   if (!user) {
-    throw new Error('존재하지 않는 회원입니다.');
+    return res.status(404).json({error: "존재하지 않는 회원입니다."});
   }
+  
   if (user.password !== hashPassword(password)) {
-    throw new Error('비밀번호가 일치하지 않습니다.');
+    return res.status(404).json({error: "비밀번호가 일치하지 않습니다."});
   }
+  
+  res.json({message: '로그인 성공'});
+  
+}));
 
-  res.send({message: '로그인 성공!'});
-});
-
-/* GET users listing. */
-router.get('/', function(req, res, next) {
-  res.send('respond with a resource');
-});
+router.delete('/:userId/delete', asyncHandler(async (req, res) => {
+  const user = User.findById(req.params.userId);
+  await User.deleteOne(user);
+  res.json({message: '탈퇴 성공'});
+}))
 
 module.exports = router;
