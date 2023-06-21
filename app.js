@@ -11,7 +11,7 @@ var usersRouter = require('./routes/users');
 const app = express();
 
 // mongoose setup
-mongoose.connect("mongodb://127.0.0.1:27017/yeoun");
+mongoose.connect('mongodb+srv://yeoun:kgw469Q3t7riuXPe@yeoun.fbf0laa.mongodb.net/?retryWrites=true&w=majority');
 
 mongoose.connection.on("connected", () => {
   console.log("Successfully connected to MongoDB");
