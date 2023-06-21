@@ -1,7 +1,7 @@
 var express = require('express');
 var router = express.Router();
 const hashPassword = require('../utils/hash-password');
-const {User} = require('../models/User');
+const User = require('../models/User');
 
 router.post('/signup', async (req, res, next) => {
   const {email, password, nickname, introduction, profileImage} = req.body;
