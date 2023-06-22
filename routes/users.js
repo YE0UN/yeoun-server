@@ -96,6 +96,16 @@ router.get('/:userId/posts', asyncHandler(async(req, res) => {
 
   const posts = await Post.find({user: user._id});
   res.json({posts});
+}))
+
+/* 댓글, 스크랩
+router.get('/:userId/comments', asyncHandler(async(req, res) => {
 
 }))
+
+router.get('/:userId/scraps', asyncHandler(async(req, res) => {
+
+}))
+*/
+
 module.exports = router;
