@@ -2,6 +2,7 @@ const { Router } = require('express');
 const router = Router();
 const hashPassword = require('../utils/hash-password');
 const User = require('../models/User');
+const Post = require('../models/Post');
 const asyncHandler = require('../utils/async-handler');
 
 
@@ -84,4 +85,17 @@ router.put('/:userId/profile/introduction', asyncHandler(async(req, res) => {
   res.json({message: '소개 변경이 완료되었습니다.'});
 }))
 
+
+//마이페이지
+router.get('/:userId/posts', asyncHandler(async(req, res) => {
+  const user = await User.findById(req.params.userId);
+
+  if(!user) {
+    return res.status(404).json({error: "존재하지 않는 회원입니다."});
+  }
+
+  const posts = await Post.find({user: user._id});
+  res.json({posts});
+
+}))
 module.exports = router;
