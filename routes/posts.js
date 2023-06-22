@@ -6,6 +6,8 @@ const User = require('../models/User');
 
 const statusCode = require('../utils/status-code');
 
+const moment = require('moment-timezone');
+
 /* 모든 게시물 보기 + 지역별, 검색, 정렬 */
 router.get('/', async (req, res) =>{
     
@@ -178,6 +180,7 @@ router.put('/:postId', async (req, res) =>{
     post.title = req.body.title;
     post.img = req.body.img;
     post.content = req.body.content;
+    post.updatedAt = moment.tz(new Date(), 'Asia/Seoul').format('YYYY-MM-DD HH:mm:ss');
     console.log('게시물 수정 완료', post);
     result = await post.save();
     return res.json(result);
