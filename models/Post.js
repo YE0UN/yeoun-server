@@ -26,10 +26,10 @@ const PostSchema = new Schema({
     },
 
     // 유저
-    author: {
-        type:Schema.Types.ObjectId,
-        ref:'User',
-        //required: true,
+    user: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
     },
 }, { 
 	// 생성, 수정시간 자동으로 기록

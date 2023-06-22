@@ -4,6 +4,8 @@ const router = Router();
 const Post = require('../models/Post');
 const User = require('../models/User');
 
+const statusCode = require('../utils/status-code');
+
 /* 모든 게시물 보기 + 지역별, 검색, 정렬 */
 router.get('/', async (req, res) =>{
     
@@ -23,7 +25,9 @@ router.get('/', async (req, res) =>{
                     { title: {$regex: new RegExp(`${keyword}`, "i"), } },
                     { content: {$regex: new RegExp(`${keyword}`, "i"), } }
                 ],
-            }).sort({
+            })
+            .populate('user', 'nickname profileImage')
+            .sort({
                 // 일단 최신순만
                 createdAt: -1
             });
@@ -36,7 +40,7 @@ router.get('/', async (req, res) =>{
                 { title: {$regex: new RegExp(`${keyword}`, "i"), } },
                 { content: {$regex: new RegExp(`${keyword}`, "i"), } }
             ],
-        });
+        }).populate('user', 'nickname profileImage');
         return res.json(result);
     }
     // 지역별
@@ -45,7 +49,9 @@ router.get('/', async (req, res) =>{
         if (sort) {
             const result = await Post.find({
                 siDo: siDo,
-            }).sort({
+            })
+            .populate('user', 'nickname profileImage')
+            .sort({
                 // 일단 최신순만
                 createdAt: -1
             });
@@ -53,7 +59,7 @@ router.get('/', async (req, res) =>{
         }
         const result = await Post.find({
             siDo: siDo,
-        });
+        }).populate('user', 'nickname profileImage');
         return res.json(result);
     }
     // 검색별
@@ -66,7 +72,9 @@ router.get('/', async (req, res) =>{
                     { title: {$regex: new RegExp(`${keyword}`, "i"), } },
                     { content: {$regex: new RegExp(`${keyword}`, "i"), } }
                 ],
-            }).sort({
+            })
+            .populate('user', 'nickname profileImage')
+            .sort({
                 // 일단 최신순만
                 createdAt: -1
             });
@@ -78,43 +86,46 @@ router.get('/', async (req, res) =>{
                 { title: {$regex: new RegExp(`${keyword}`, "i"), } },
                 { content: {$regex: new RegExp(`${keyword}`, "i"), } }
             ],
-        });
+        }).populate('user', 'nickname profileImage');
         return res.json(result);
     }
     // 정렬 (최신순, 인기순, 댓글순)
     if (sort) {}
-    // 모든 게시물 (기본 최신순)
-    const result = await Post.find().sort({createdAt: -1});
+    // 모든 게시물
+    const result = await Post.find().populate('user', 'nickname profileImage');
     return res.json(result);
 });
 
-// 특정 게시물 보기
+/* 특정 게시물 보기 */
 router.get('/:postId', async (req, res) =>{
-    const result = await Post.findById(req.params.postId);
+    const result = await Post.findById(req.params.postId)
+                                .populate('user', 'nickname profileImage');
     // 게시물 찾기 실패
     if (!result) {
-        res.status(404);
+        res.status(statusCode.NOT_FOUND);
         return res.json({error: "해당 게시물 없음"});
     }
     return res.json(result);
 }); 
 
-// 게시물 작성하기
+/* 게시물 작성하기 */
 router.post('/', async (req, res) =>{
-    // 로그인 안 되어있으면 로그인하게끔
-    // const author = await User.find({
-    //     _id: req.user.userId,
-    // })
+    // 로그인 여부 확인
+    const user = await User.findById(req.body.userId);
+    if (!user) {
+        res.status(statusCode.UNAUTHORIZED);
+        return res.json({error: "로그인이 필요합니다"});
+    }
 
     const { siDo, title, content, img } = req.body;
     
     // 필수 작성 validation
     if (!siDo) {
-        res.status(400);
+        res.status(statusCode.BAD_REQUEST);
         return res.json({error: "지역을 선택하세요"});
     }
     if (!content) {
-        res.status(400);
+        res.status(statusCode.BAD_REQUEST);
         return res.json({error: "내용을 입력하세요"});
     }
 
@@ -123,31 +134,43 @@ router.post('/', async (req, res) =>{
         title,
         content,
         img,
-        //author,
+        user,
     });
 
+    console.log('게시물 작성 완료', post);
     const result = await post.save();
     return res.json(result);
 }); 
 
-// 게시물 수정하기
+/* 게시물 수정하기 */
 router.put('/:postId', async (req, res) =>{
-    // 로그인한 유저인지
     
-    const post = await Post.findById(req.params.postId);
-    
+    const post = await Post.findById(req.params.postId).populate('user');
     // 게시물 찾기 실패
     if (!post) {
-        res.status(404);
+        res.status(statusCode.NOT_FOUND);
         return res.json({error: "해당 게시물 없음"});
     }
+
+    const user = await User.findById(req.body.userId);
+    // 로그인 여부 확인
+    if (!user) {
+        res.status(statusCode.UNAUTHORIZED);
+        return res.json({error: "로그인이 필요합니다"});
+    }
+    // 게시물 작성자와 로그인 유저와 일치하는지
+    if (!post.user._id.equals(user._id)) {
+        res.status(statusCode.FORBIDDEN);
+        return res.json({error: "수정할 수 없음"});
+    }
+
     // 필수 작성 validation
     if (!req.body.siDo) {
-        res.status(400);
+        res.status(statusCode.BAD_REQUEST);
         return res.json({error: "지역을 선택하세요"});
     }
     if (!req.body.content) {
-        res.status(400);
+        res.status(statusCode.BAD_REQUEST);
         return res.json({error: "내용을 입력하세요"});
     }
 
@@ -155,14 +178,36 @@ router.put('/:postId', async (req, res) =>{
     post.title = req.body.title;
     post.img = req.body.img;
     post.content = req.body.content;
+    console.log('게시물 수정 완료', post);
     result = await post.save();
     return res.json(result);
 });
 
-// 게시물 삭제하기 
+/* 게시물 삭제하기 */ 
 router.delete('/:postId', async (req, res) =>{
-    // 로그인한 유저인지
-    result = await Post.findByIdAndDelete(req.params.postId);
+
+    const post = await Post.findById(req.params.postId).populate('user');
+    // 게시물 찾기 실패
+    if (!post) {
+        res.status(statusCode.NOT_FOUND);
+        return res.json({error: "해당 게시물 없음"});
+    }
+
+    const user = await User.findById(req.body.userId);
+    // 로그인 여부 확인
+    if (!user) {
+        res.status(statusCode.UNAUTHORIZED);
+        return res.json({error: "로그인이 필요합니다"});
+    }
+    
+    // 게시물 작성자와 로그인 유저와 일치하는지
+    if (!post.user._id.equals(user._id)) {
+        res.status(statusCode.FORBIDDEN);
+        return res.json({error: "삭제할 수 없음"});
+    }
+
+    const result = await Post.deleteOne(post);
+    console.log('게시물 삭제 완료', result);
     return res.json({message: "삭제 완료"});
 }); 
 
