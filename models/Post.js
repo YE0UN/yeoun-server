@@ -45,7 +45,7 @@ const PostSchema = new Schema({
         type: String,
         default: function() {
             return moment.tz(new Date(), 'Asia/Seoul').format('YYYY-MM-DD HH:mm:ss')
-       }
+        }
     }
 });
 
