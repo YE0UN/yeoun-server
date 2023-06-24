@@ -23,7 +23,7 @@ router.post('/signup', asyncHandler(async (req, res) => {
 //로그인
 router.post('/signin', asyncHandler(async (req, res) => {
   const {email, password} = req.body;
-  const user = User.findOne({ email });
+  const user = User.findOne({email});
   
   if (!user) {
     return res.status(404).json({error: "존재하지 않는 회원입니다."});
@@ -42,6 +42,23 @@ router.delete('/:userId/delete', asyncHandler(async (req, res) => {
   const user = await User.findById(req.params.userId);
   await User.deleteOne(user);
   res.json({message: '탈퇴 성공'});
+}))
+
+//중복 확인
+router.get('/validate/email/:email', asyncHandler(async(req, res) => {
+  const email = req.params.email;
+  if(await User.exists({email})) {
+    return res.status(409).json({error: "이미 사용 중인 이메일입니다."});
+  }
+  res.json({message: "사용 가능한 이메일입니다."});
+}))
+
+router.get('/validate/nickname/:nickname', asyncHandler(async(req, res) => {
+  const nickname = req.params.nickname;
+  if(await User.exists({nickname})) {
+    return res.status(409).json({error: "이미 사용 중인 닉네임입니다."});
+  }
+  res.json({message: "사용 가능한 닉네임입니다."});
 }))
 
 //프로필 조회
