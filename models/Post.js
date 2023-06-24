@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const PostSchema = new Schema({
@@ -33,7 +33,7 @@ const PostSchema = new Schema({
     },
 }, { 
 	// 생성, 수정시간 자동으로 기록
-	timestamps: true 
+	timestamps: true,
 });
 
 module.exports = mongoose.model('Post', PostSchema);
