@@ -4,10 +4,11 @@ const router = Router();
 const Post = require('../models/Post');
 const User = require('../models/User');
 
+const asyncHandler = require('../utils/async-handler');
 const statusCode = require('../utils/status-code');
 
 /* 모든 게시물 보기 + 지역별, 검색, 정렬 */
-router.get('/', async (req, res) =>{
+router.get('/', asyncHandler(async (req, res) =>{
     
     // 댓글 수, 좋아요 수에 써먹을 수 있을 듯
     // const count_board = await Board.countDocuments();
@@ -93,11 +94,11 @@ router.get('/', async (req, res) =>{
     if (sort) {}
     // 모든 게시물
     const result = await Post.find().populate('user', 'nickname profileImage');
-    return res.json(result);
-});
+    res.json(result);
+}));
 
 /* 특정 게시물 보기 */
-router.get('/:postId', async (req, res) =>{
+router.get('/:postId', asyncHandler(async (req, res) =>{
     const result = await Post.findById(req.params.postId)
                                 .populate('user', 'nickname profileImage');
     // 게시물 찾기 실패
@@ -105,11 +106,11 @@ router.get('/:postId', async (req, res) =>{
         res.status(statusCode.NOT_FOUND);
         return res.json({error: "해당 게시물 없음"});
     }
-    return res.json(result);
-}); 
+    res.json(result);
+})); 
 
 /* 게시물 작성하기 */
-router.post('/', async (req, res) =>{
+router.post('/', asyncHandler(async (req, res) =>{
     // 로그인 여부 확인
     const user = await User.findById(req.body.userId);
     if (!user) {
@@ -138,12 +139,11 @@ router.post('/', async (req, res) =>{
     });
 
     console.log('게시물 작성 완료', post);
-    const result = await post.save();
-    return res.json(result);
-}); 
+    res.json(post);
+})); 
 
 /* 게시물 수정하기 */
-router.put('/:postId', async (req, res) =>{
+router.put('/:postId', asyncHandler(async (req, res) =>{
     
     const post = await Post.findById(req.params.postId).populate('user');
     // 게시물 찾기 실패
@@ -178,13 +178,14 @@ router.put('/:postId', async (req, res) =>{
     post.title = req.body.title;
     post.img = req.body.img;
     post.content = req.body.content;
-    console.log('게시물 수정 완료', post);
+    
     result = await post.save();
-    return res.json(result);
-});
+    console.log('게시물 수정 완료', result);
+    res.json(result);
+}));
 
 /* 게시물 삭제하기 */ 
-router.delete('/:postId', async (req, res) =>{
+router.delete('/:postId', asyncHandler(async (req, res) =>{
 
     const post = await Post.findById(req.params.postId).populate('user');
     // 게시물 찾기 실패
@@ -208,7 +209,7 @@ router.delete('/:postId', async (req, res) =>{
 
     const result = await Post.deleteOne(post);
     console.log('게시물 삭제 완료', result);
-    return res.json({message: "삭제 완료"});
-}); 
+    res.json({message: "삭제 완료"});
+})); 
 
 module.exports = router;
