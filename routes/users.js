@@ -23,7 +23,7 @@ router.post('/signup', asyncHandler(async (req, res) => {
 //로그인
 router.post('/signin', asyncHandler(async (req, res) => {
   const {email, password} = req.body;
-  const user = User.findOne({email});
+  const user = await User.findOne({email});
   
   if (!user) {
     return res.status(404).json({error: "존재하지 않는 회원입니다."});
@@ -33,7 +33,10 @@ router.post('/signin', asyncHandler(async (req, res) => {
     return res.status(404).json({error: "비밀번호가 일치하지 않습니다."});
   }
   
-  res.json({message: '로그인 성공'});
+  res.json({
+    message: '로그인 성공',
+    userId: user._id
+  });
   
 }));
 
