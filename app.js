@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+var cors = require('cors');
 
 var postsRouter = require('./routes/posts');
 var usersRouter = require('./routes/users');
@@ -17,6 +18,9 @@ mongoose.connection.on("connected", () => {
   console.log("Successfully connected to MongoDB");
 })
 
+// cors 처리
+app.use(express.json());
+app.use(cors({ origin: '*' }));
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -30,7 +34,7 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, '../yeoun-client/build')));
 
 app.use('/posts', postsRouter);
 app.use('/users', usersRouter);
@@ -49,6 +53,15 @@ app.use(function(err, req, res, next) {
   // render the error page
   res.status(err.status || 500);
   res.render('error');
+});
+
+// 리액트로 라우팅 넘김
+app.get('/', (res, req) => {
+  req.sendFile(path.join(__dirname, '../yeoun-client/build/index.html'));
+});
+
+app.get('*', function (req, res) {
+  res.sendFile(path.join(__dirname, '../yeoun-client/build/index.html'));
 });
 
 module.exports = app;
