@@ -18,13 +18,13 @@ mongoose.connection.on("connected", () => {
   console.log("Successfully connected to MongoDB");
 })
 
-// cors 처리
-app.use(express.json());
-app.use(cors({ origin: '*' }));
-
 // 파싱 허용 용량
 app.use(express.json({limit: '100mb'}));
 app.use(express.urlencoded({limit: '100mb', extended: false}));
+
+// cors 처리
+app.use(express.json());
+app.use(cors({ origin: '*' }));
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
