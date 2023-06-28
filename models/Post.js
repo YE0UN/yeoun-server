@@ -31,8 +31,19 @@ const PostSchema = new Schema({
         ref: 'User',
         required: true,
     },
+
+    // 댓글 
+    comments: [{
+        type:Schema.Types.ObjectId,
+        ref:'Comment'
+    }],
+
+    // 댓글 수
+    commentCount: {
+        type: Number,
+        default: 0,
+    }
 }, { 
-	// 생성, 수정시간 자동으로 기록
 	timestamps: true,
 });
 

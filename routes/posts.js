@@ -3,15 +3,13 @@ const router = Router();
 
 const Post = require('../models/Post');
 const User = require('../models/User');
+const Comment = require('../models/Comment');
 
 const asyncHandler = require('../utils/async-handler');
 const statusCode = require('../utils/status-code');
 
 /* 모든 게시물 보기 + 지역별, 검색, 정렬 */
-router.get('/', asyncHandler(async (req, res) =>{
-    
-    // 댓글 수, 좋아요 수에 써먹을 수 있을 듯
-    // const count_board = await Board.countDocuments();
+router.get('/', asyncHandler(async (req, res) => {
     
     const {siDo, keyword, sort} = req.query;
     
@@ -32,6 +30,7 @@ router.get('/', asyncHandler(async (req, res) =>{
                 // 일단 최신순만
                 createdAt: -1
             });
+            
             return res.json(result);
         }
         const result = await Post.find({
@@ -98,36 +97,52 @@ router.get('/', asyncHandler(async (req, res) =>{
 }));
 
 /* 특정 게시물 보기 */
-router.get('/:postId', asyncHandler(async (req, res) =>{
-    const result = await Post.findById(req.params.postId)
-                                .populate('user', 'nickname profileImage');
+router.get('/:postId', asyncHandler(async (req, res) => {
+    const post = await Post.findById(req.params.postId)
+                                .populate('user', 'nickname profileImage')
+                                .populate({
+                                    path: 'comments',
+                                    select: 'content createdAt',
+                                    populate: {
+                                        path: 'user',
+                                        select: 'nickname profileImage'
+                                    }
+                                });
     // 게시물 찾기 실패
-    if (!result) {
+    if (!post) {
         res.status(statusCode.NOT_FOUND);
         return res.json({error: "해당 게시물 없음"});
     }
-    res.json(result);
+
+    res.json(post);
 })); 
 
 /* 게시물 작성하기 */
-router.post('/', asyncHandler(async (req, res) =>{
+router.post('/', asyncHandler(async (req, res) => {
+
+    const { siDo, title, content, img, userId } = req.body;
+
     // 로그인 여부 확인
-    const user = await User.findById(req.body.userId);
-    if (!user) {
+    if (!userId) {
         res.status(statusCode.UNAUTHORIZED);
-        return res.json({error: "로그인이 필요합니다"});
+        return res.json({error: "로그인이 필요합니다."});
     }
 
-    const { siDo, title, content, img } = req.body;
-    
+    // 회원 존재 확인
+    const user = await User.findById(userId);
+    if (!user) {
+        res.status(statusCode.NOT_FOUND);
+        return res.json({error: "존재하지 않는 회원입니다."});
+    }
+
     // 필수 작성 validation
     if (!siDo) {
         res.status(statusCode.BAD_REQUEST);
-        return res.json({error: "지역을 선택하세요"});
+        return res.json({error: "지역을 선택하세요."});
     }
     if (!content) {
         res.status(statusCode.BAD_REQUEST);
-        return res.json({error: "내용을 입력하세요"});
+        return res.json({error: "내용을 입력하세요."});
     }
 
     const post = await Post.create({
@@ -138,78 +153,96 @@ router.post('/', asyncHandler(async (req, res) =>{
         user,
     });
 
-    console.log('게시물 작성 완료', post);
-    res.json(post);
+    console.log('게시물 작성 완료');
+    res.json({message: '게시물 작성이 완료되었습니다.'});
 })); 
 
 /* 게시물 수정하기 */
-router.put('/:postId', asyncHandler(async (req, res) =>{
+router.put('/:postId', asyncHandler(async (req, res) => {
     
-    const post = await Post.findById(req.params.postId).populate('user');
+    const post = await Post.findById(req.params.postId);
     // 게시물 찾기 실패
     if (!post) {
         res.status(statusCode.NOT_FOUND);
         return res.json({error: "해당 게시물 없음"});
     }
 
-    const user = await User.findById(req.body.userId);
+    const { siDo, title, content, img, userId } = req.body;
+
     // 로그인 여부 확인
-    if (!user) {
+    if (!userId) {
         res.status(statusCode.UNAUTHORIZED);
-        return res.json({error: "로그인이 필요합니다"});
+        return res.json({error: "로그인이 필요합니다."});
     }
-    // 게시물 작성자와 로그인 유저와 일치하는지
-    if (!post.user._id.equals(user._id)) {
+
+    // 회원 존재 확인
+    const user = await User.findById(userId);
+    if (!user) {
+        res.status(statusCode.NOT_FOUND);
+        return res.json({error: "존재하지 않는 회원입니다."});
+    }
+
+    // 게시물 작성자와 로그인 유저 일치하는지
+    if (!post.user._id.equals(userId)) {
         res.status(statusCode.FORBIDDEN);
-        return res.json({error: "수정할 수 없음"});
+        return res.json({error: "수정할 권한이 없습니다."});
     }
 
     // 필수 작성 validation
-    if (!req.body.siDo) {
+    if (!siDo) {
         res.status(statusCode.BAD_REQUEST);
-        return res.json({error: "지역을 선택하세요"});
+        return res.json({error: "지역을 선택하세요."});
     }
-    if (!req.body.content) {
+    if (!content) {
         res.status(statusCode.BAD_REQUEST);
-        return res.json({error: "내용을 입력하세요"});
+        return res.json({error: "내용을 입력하세요."});
     }
 
-    post.siDo = req.body.siDo;
-    post.title = req.body.title;
-    post.img = req.body.img;
-    post.content = req.body.content;
+    post.siDo = siDo;
+    post.title = title;
+    post.img = img;
+    post.content = content;
     
-    result = await post.save();
-    console.log('게시물 수정 완료', result);
-    res.json(result);
+    await post.save();
+    console.log('게시물 수정 완료');
+    res.json({message: "게시물 수정이 완료되었습니다."});
 }));
 
 /* 게시물 삭제하기 */ 
-router.delete('/:postId', asyncHandler(async (req, res) =>{
+router.delete('/:postId', asyncHandler(async (req, res) => {
 
-    const post = await Post.findById(req.params.postId).populate('user');
+    const post = await Post.findById(req.params.postId);
     // 게시물 찾기 실패
     if (!post) {
         res.status(statusCode.NOT_FOUND);
         return res.json({error: "해당 게시물 없음"});
     }
-
-    const user = await User.findById(req.body.userId);
-    // 로그인 여부 확인
-    if (!user) {
+    const { userId } = req.body;
+     // 로그인 여부 확인
+     if (!userId) {
         res.status(statusCode.UNAUTHORIZED);
-        return res.json({error: "로그인이 필요합니다"});
-    }
-    
-    // 게시물 작성자와 로그인 유저와 일치하는지
-    if (!post.user._id.equals(user._id)) {
-        res.status(statusCode.FORBIDDEN);
-        return res.json({error: "삭제할 수 없음"});
+        return res.json({error: "로그인이 필요합니다."});
     }
 
-    const result = await Post.deleteOne(post);
-    console.log('게시물 삭제 완료', result);
-    res.json({message: "삭제 완료"});
+    // 회원 존재 확인
+    const user = await User.findById(userId);
+    if (!user) {
+        res.status(statusCode.NOT_FOUND);
+        return res.json({error: "존재하지 않는 회원입니다."});
+    }
+
+    // 게시물 작성자와 로그인 유저 일치하는지
+    if (!post.user._id.equals(userId)) {
+        res.status(statusCode.FORBIDDEN);
+        return res.json({error: "삭제할 권한이 없습니다."});
+    }
+
+    // Comment에서도 삭제
+    await Comment.deleteMany({ post: post });
+    await Post.deleteOne(post);
+    
+    console.log('게시물 삭제 완료');
+    res.json({message: "게시물 삭제가 완료되었습니다."});
 })); 
 
 module.exports = router;
