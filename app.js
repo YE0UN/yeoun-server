@@ -22,6 +22,10 @@ mongoose.connection.on("connected", () => {
 app.use(express.json());
 app.use(cors({ origin: '*' }));
 
+// 파싱 허용 용량
+app.use(express.json({limit: '100mb'}));
+app.use(express.urlencoded({limit: '100mb', extended: false}));
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
