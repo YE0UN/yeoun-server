@@ -68,6 +68,7 @@ router.get('/validate/nickname/:nickname', asyncHandler(async(req, res) => {
 router.get('/:userId/profile', asyncHandler(async (req, res) => {
   const user = await User.findById(req.params.userId);
   res.json({user: {
+    email: user.email,
     nickname: user.nickname,
     profileImage: user.profileImage,
     introduction: user.introduction,
