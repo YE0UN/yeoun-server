@@ -12,28 +12,49 @@ const statusCode = require('../utils/status-code');
 router.get('/', asyncHandler(async (req, res) => {
     
     const {siDo, keyword, sort} = req.query;
+    let result;
     
     // 지역별 & 검색별
     if (siDo && keyword) {
         // + 정렬
         if (sort) {
-            const result = await Post.find({
-                siDo: siDo,
-                $or: [
-                    // i: 대소문자 구별X
-                    { title: {$regex: new RegExp(`${keyword}`, "i"), } },
-                    { content: {$regex: new RegExp(`${keyword}`, "i"), } }
-                ],
-            })
-            .populate('user', 'nickname profileImage')
-            .sort({
-                // 일단 최신순만
-                createdAt: -1
-            });
-            
+            switch (sort) {
+                case "createdAt": 
+                    result = await Post.find({
+                        siDo: siDo,
+                        $or: [
+                            // i: 대소문자 구별X
+                            { title: {$regex: new RegExp(`${keyword}`, "i"), } },
+                            { content: {$regex: new RegExp(`${keyword}`, "i"), } }
+                        ],
+                    }).populate('user', 'nickname profileImage').sort({createdAt: -1});
+                    break;
+                    
+                case "comment":
+                    result = await Post.find({
+                        siDo: siDo,
+                        $or: [
+                            // i: 대소문자 구별X
+                            { title: {$regex: new RegExp(`${keyword}`, "i"), } },
+                            { content: {$regex: new RegExp(`${keyword}`, "i"), } }
+                        ],
+                    }).populate('user', 'nickname profileImage').sort({commentCount: -1});
+                    break;
+    
+                // case "like":
+                //     result = await Post.find({
+                //     siDo: siDo,
+                //     $or: [
+                //         // i: 대소문자 구별X
+                //         { title: {$regex: new RegExp(`${keyword}`, "i"), } },
+                //         { content: {$regex: new RegExp(`${keyword}`, "i"), } }
+                //     ],
+                // }).populate('user', 'nickname profileImage').sort({likeCount: -1});
+                //     break;
+            }
             return res.json(result);
         }
-        const result = await Post.find({
+        result = await Post.find({
             siDo: siDo,
             $or: [
                 // i: 대소문자 구별X
@@ -47,17 +68,28 @@ router.get('/', asyncHandler(async (req, res) => {
     if (siDo) {
         // + 정렬
         if (sort) {
-            const result = await Post.find({
-                siDo: siDo,
-            })
-            .populate('user', 'nickname profileImage')
-            .sort({
-                // 일단 최신순만
-                createdAt: -1
-            });
+            switch (sort) {
+                case "createdAt": 
+                    result = await Post.find({
+                        siDo: siDo,
+                    }).populate('user', 'nickname profileImage').sort({createdAt: -1});
+                    break;
+                    
+                case "comment":
+                    result = await Post.find({
+                        siDo: siDo,
+                    }).populate('user', 'nickname profileImage').sort({commentCount: -1});
+                    break;
+    
+                // case "like":
+                //     result = await Post.find({
+                //     siDo: siDo,
+                // }).populate('user', 'nickname profileImage').sort({likeCount: -1});
+                //     break;
+            }
             return res.json(result);
         }
-        const result = await Post.find({
+        result = await Post.find({
             siDo: siDo,
         }).populate('user', 'nickname profileImage');
         return res.json(result);
@@ -66,21 +98,40 @@ router.get('/', asyncHandler(async (req, res) => {
     if (keyword) {
         // + 정렬
         if (sort) {
-            const result = await Post.find({
-                $or: [
-                    // i: 대소문자 구별X
-                    { title: {$regex: new RegExp(`${keyword}`, "i"), } },
-                    { content: {$regex: new RegExp(`${keyword}`, "i"), } }
-                ],
-            })
-            .populate('user', 'nickname profileImage')
-            .sort({
-                // 일단 최신순만
-                createdAt: -1
-            });
+            switch (sort) {
+                case "createdAt": 
+                    result = await Post.find({
+                        $or: [
+                            // i: 대소문자 구별X
+                            { title: {$regex: new RegExp(`${keyword}`, "i"), } },
+                            { content: {$regex: new RegExp(`${keyword}`, "i"), } }
+                        ],
+                    }).populate('user', 'nickname profileImage').sort({createdAt: -1});
+                    break;
+                    
+                case "comment":
+                    result = await Post.find({
+                        $or: [
+                            // i: 대소문자 구별X
+                            { title: {$regex: new RegExp(`${keyword}`, "i"), } },
+                            { content: {$regex: new RegExp(`${keyword}`, "i"), } }
+                        ],
+                    }).populate('user', 'nickname profileImage').sort({commentCount: -1});
+                    break;
+    
+                // case "like":
+                //     result = await Post.find({
+                    //     $or: [
+                    //         // i: 대소문자 구별X
+                    //         { title: {$regex: new RegExp(`${keyword}`, "i"), } },
+                    //         { content: {$regex: new RegExp(`${keyword}`, "i"), } }
+                    //     ],
+                    // }).populate('user', 'nickname profileImage').sort({likeCount: -1});
+                //     break;
+            }
             return res.json(result);
         }
-        const result = await Post.find({
+        result = await Post.find({
             $or: [
                 // i: 대소문자 구별X
                 { title: {$regex: new RegExp(`${keyword}`, "i"), } },
@@ -90,9 +141,24 @@ router.get('/', asyncHandler(async (req, res) => {
         return res.json(result);
     }
     // 정렬 (최신순, 인기순, 댓글순)
-    if (sort) {}
+    if (sort) {
+        switch (sort) {
+            case "createdAt": 
+                result = await Post.find().populate('user', 'nickname profileImage').sort({createdAt: -1});
+                break;
+                
+            case "comment":
+                result = await Post.find().populate('user', 'nickname profileImage').sort({commentCount: -1});
+                break;
+
+            // case "like":
+            //     result = await Post.find().populate('user', 'nickname profileImage').sort({likeCount: -1});
+            //     break;
+        }
+        return res.json(result);
+    }
     // 모든 게시물
-    const result = await Post.find().populate('user', 'nickname profileImage');
+    result = await Post.find().populate('user', 'nickname profileImage');
     res.json(result);
 }));
 
@@ -154,7 +220,7 @@ router.post('/', asyncHandler(async (req, res) => {
     });
 
     console.log('게시물 작성 완료');
-    res.json({message: '게시물 작성이 완료되었습니다.'});
+    res.json(post);
 })); 
 
 /* 게시물 수정하기 */
@@ -205,7 +271,7 @@ router.put('/:postId', asyncHandler(async (req, res) => {
     
     await post.save();
     console.log('게시물 수정 완료');
-    res.json({message: "게시물 수정이 완료되었습니다."});
+    res.json(post);
 }));
 
 /* 게시물 삭제하기 */ 

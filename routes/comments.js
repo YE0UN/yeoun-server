@@ -52,7 +52,7 @@ router.post('/:postId', asyncHandler(async (req, res) => {
     await post.save();
 
     console.log('댓글 작성 완료');
-    res.json({ message: "댓글 작성이 완료되었습니다."});
+    res.json(post);
 
 }));
 
@@ -96,10 +96,7 @@ router.delete('/:commentId', asyncHandler(async (req, res) => {
     await post.save();
     
     console.log('댓글 삭제 완료');
-    res.json({message: "댓글 삭제가 완료되었습니다."});
+    res.json(post);
 }));
-
-/* 특정 댓글에 대댓글 남기기 */
-// router.post('/comments/:commentId', Comment.re_comment);
 
 module.exports = router;
