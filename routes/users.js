@@ -1,11 +1,15 @@
 const { Router } = require('express');
 const router = Router();
-const hashPassword = require('../utils/hash-password');
+
 const User = require('../models/User');
 const Post = require('../models/Post');
+const hashPassword = require('../utils/hash-password');
 const Comment = require('../models/Comment');
 const asyncHandler = require('../utils/async-handler');
 
+
+const asyncHandler = require('../utils/async-handler');
+const hashPassword = require('../utils/hash-password');
 
 //회원가입
 router.post('/signup', asyncHandler(async (req, res) => {
@@ -76,35 +80,20 @@ router.get('/:userId/profile', asyncHandler(async (req, res) => {
   }});
 }))
 
-//개인정보 변경
-router.put('/:userId/profile/image', asyncHandler(async(req, res) => {
-  await User.findByIdAndUpdate({_id: req.params.userId}, {profileImage: req.body.profileImage});
+//프로필 변경
+router.put('/:userId/profile', asyncHandler(async(req, res) => {
+  await User.findByIdAndUpdate(
+    {_id: req.params.userId},
+    {
+      profileImage: req.body.profileImage,
+      email: req.body.email,
+      password: hashPassword(req.body.password),
+      nickname: req.body.nickname,
+      introduction: req.body.introduction
+    }
+    );
 
-  res.json({message: '프로필 이미지 변경이 완료되었습니다.'});
-}))
-
-router.put('/:userId/profile/email', asyncHandler(async(req, res) => {
-  await User.findByIdAndUpdate({_id: req.params.userId}, {email: req.body.email});
-
-  res.json({message: '이메일 변경이 완료되었습니다.'});
-}))
-
-router.put('/:userId/profile/nickname', asyncHandler(async(req, res) => {
-  await User.findByIdAndUpdate({_id: req.params.userId}, {nickname: req.body.nickname});
-
-  res.json({message: '닉네임 변경이 완료되었습니다.'});
-}))
-
-router.put('/:userId/profile/password', asyncHandler(async(req, res) => {
-  await User.findByIdAndUpdate({_id: req.params.userId}, {password: hashPassword(req.body.password)});
-
-  res.json({message: '비밀번호 변경이 완료되었습니다.'});
-}))
-
-router.put('/:userId/profile/introduction', asyncHandler(async(req, res) => {
-  await User.findByIdAndUpdate({_id: req.params.userId}, {introduction: req.body.introduction});
-
-  res.json({message: '소개 변경이 완료되었습니다.'});
+  res.json({message: '프로필 변경이 완료되었습니다.'});
 }))
 
 
