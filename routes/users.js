@@ -3,6 +3,7 @@ const router = Router();
 const hashPassword = require('../utils/hash-password');
 const User = require('../models/User');
 const Post = require('../models/Post');
+const Comment = require('../models/Comment');
 const asyncHandler = require('../utils/async-handler');
 
 
@@ -119,11 +120,19 @@ router.get('/:userId/posts', asyncHandler(async(req, res) => {
   res.json({posts});
 }))
 
-/* 댓글, 스크랩
+//댓글
 router.get('/:userId/comments', asyncHandler(async(req, res) => {
+  const user = await User.findById(req.params.userId);
 
+  if(!user) {
+    return res.status(404).json({error: "존재하지 않는 회원입니다."});
+  }
+
+  const comments = await Comment.find({user: user._id})
+  res.json({comments});
 }))
 
+/*스크랩
 router.get('/:userId/scraps', asyncHandler(async(req, res) => {
 
 }))
