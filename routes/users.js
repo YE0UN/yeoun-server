@@ -3,10 +3,7 @@ const router = Router();
 
 const User = require('../models/User');
 const Post = require('../models/Post');
-const hashPassword = require('../utils/hash-password');
 const Comment = require('../models/Comment');
-const asyncHandler = require('../utils/async-handler');
-
 
 const asyncHandler = require('../utils/async-handler');
 const hashPassword = require('../utils/hash-password');
@@ -87,13 +84,22 @@ router.put('/:userId/profile', asyncHandler(async(req, res) => {
     {
       profileImage: req.body.profileImage,
       email: req.body.email,
-      password: hashPassword(req.body.password),
       nickname: req.body.nickname,
       introduction: req.body.introduction
     }
     );
 
   res.json({message: '프로필 변경이 완료되었습니다.'});
+}))
+
+//비밀번호 변경
+router.put('/:userId/profile/pw', asyncHandler(async(req, res) => {
+  await User.findByIdAndUpdate(
+    {_id: req.params.userId},
+    {password: hashPassword(req.body.password)}
+  );
+
+  res.json({message: '비밀번호 변경이 완료되었습니다.'});
 }))
 
 
