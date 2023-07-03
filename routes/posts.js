@@ -27,7 +27,7 @@ router.get('/', asyncHandler(async (req, res) => {
                             { title: {$regex: new RegExp(`${keyword}`, "i"), } },
                             { content: {$regex: new RegExp(`${keyword}`, "i"), } }
                         ],
-                    }).populate('user', 'nickname profileImage').sort({createdAt: -1});
+                    }).populate('user', 'nickname profileImage introduction').sort({createdAt: -1});
                     break;
                     
                 case "comment":
@@ -38,7 +38,7 @@ router.get('/', asyncHandler(async (req, res) => {
                             { title: {$regex: new RegExp(`${keyword}`, "i"), } },
                             { content: {$regex: new RegExp(`${keyword}`, "i"), } }
                         ],
-                    }).populate('user', 'nickname profileImage').sort({commentCount: -1});
+                    }).populate('user', 'nickname profileImage introduction').sort({commentCount: -1});
                     break;
     
                 // case "like":
@@ -49,7 +49,7 @@ router.get('/', asyncHandler(async (req, res) => {
                 //         { title: {$regex: new RegExp(`${keyword}`, "i"), } },
                 //         { content: {$regex: new RegExp(`${keyword}`, "i"), } }
                 //     ],
-                // }).populate('user', 'nickname profileImage').sort({likeCount: -1});
+                // }).populate('user', 'nickname profileImage introduction').sort({likeCount: -1});
                 //     break;
             }
             return res.json(result);
@@ -61,7 +61,7 @@ router.get('/', asyncHandler(async (req, res) => {
                 { title: {$regex: new RegExp(`${keyword}`, "i"), } },
                 { content: {$regex: new RegExp(`${keyword}`, "i"), } }
             ],
-        }).populate('user', 'nickname profileImage');
+        }).populate('user', 'nickname profileImage introduction');
         return res.json(result);
     }
     // 지역별
@@ -72,26 +72,26 @@ router.get('/', asyncHandler(async (req, res) => {
                 case "createdAt": 
                     result = await Post.find({
                         siDo: siDo,
-                    }).populate('user', 'nickname profileImage').sort({createdAt: -1});
+                    }).populate('user', 'nickname profileImage introduction').sort({createdAt: -1});
                     break;
                     
                 case "comment":
                     result = await Post.find({
                         siDo: siDo,
-                    }).populate('user', 'nickname profileImage').sort({commentCount: -1});
+                    }).populate('user', 'nickname profileImage introduction').sort({commentCount: -1});
                     break;
     
                 // case "like":
                 //     result = await Post.find({
                 //     siDo: siDo,
-                // }).populate('user', 'nickname profileImage').sort({likeCount: -1});
+                // }).populate('user', 'nickname profileImage introduction').sort({likeCount: -1});
                 //     break;
             }
             return res.json(result);
         }
         result = await Post.find({
             siDo: siDo,
-        }).populate('user', 'nickname profileImage');
+        }).populate('user', 'nickname profileImage introduction');
         return res.json(result);
     }
     // 검색별
@@ -106,7 +106,7 @@ router.get('/', asyncHandler(async (req, res) => {
                             { title: {$regex: new RegExp(`${keyword}`, "i"), } },
                             { content: {$regex: new RegExp(`${keyword}`, "i"), } }
                         ],
-                    }).populate('user', 'nickname profileImage').sort({createdAt: -1});
+                    }).populate('user', 'nickname profileImage introduction').sort({createdAt: -1});
                     break;
                     
                 case "comment":
@@ -116,7 +116,7 @@ router.get('/', asyncHandler(async (req, res) => {
                             { title: {$regex: new RegExp(`${keyword}`, "i"), } },
                             { content: {$regex: new RegExp(`${keyword}`, "i"), } }
                         ],
-                    }).populate('user', 'nickname profileImage').sort({commentCount: -1});
+                    }).populate('user', 'nickname profileImage introduction').sort({commentCount: -1});
                     break;
     
                 // case "like":
@@ -126,7 +126,7 @@ router.get('/', asyncHandler(async (req, res) => {
                     //         { title: {$regex: new RegExp(`${keyword}`, "i"), } },
                     //         { content: {$regex: new RegExp(`${keyword}`, "i"), } }
                     //     ],
-                    // }).populate('user', 'nickname profileImage').sort({likeCount: -1});
+                    // }).populate('user', 'nickname profileImage introduction').sort({likeCount: -1});
                 //     break;
             }
             return res.json(result);
@@ -137,28 +137,28 @@ router.get('/', asyncHandler(async (req, res) => {
                 { title: {$regex: new RegExp(`${keyword}`, "i"), } },
                 { content: {$regex: new RegExp(`${keyword}`, "i"), } }
             ],
-        }).populate('user', 'nickname profileImage');
+        }).populate('user', 'nickname profileImage introduction');
         return res.json(result);
     }
     // 정렬 (최신순, 인기순, 댓글순)
     if (sort) {
         switch (sort) {
             case "createdAt": 
-                result = await Post.find().populate('user', 'nickname profileImage').sort({createdAt: -1});
+                result = await Post.find().populate('user', 'nickname profileImage introduction').sort({createdAt: -1});
                 break;
                 
             case "comment":
-                result = await Post.find().populate('user', 'nickname profileImage').sort({commentCount: -1});
+                result = await Post.find().populate('user', 'nickname profileImage introduction').sort({commentCount: -1});
                 break;
 
             // case "like":
-            //     result = await Post.find().populate('user', 'nickname profileImage').sort({likeCount: -1});
+            //     result = await Post.find().populate('user', 'nickname profileImage introduction').sort({likeCount: -1});
             //     break;
         }
         return res.json(result);
     }
     // 모든 게시물
-    result = await Post.find().populate('user', 'nickname profileImage');
+    result = await Post.find().populate('user', 'nickname profileImage introduction');
     res.json(result);
 }));
 
@@ -171,7 +171,7 @@ router.get('/:postId', asyncHandler(async (req, res) => {
                                     select: 'content createdAt',
                                     populate: {
                                         path: 'user',
-                                        select: 'nickname profileImage'
+                                        select: 'nickname profileImage introduction'
                                     }
                                 });
     // 게시물 찾기 실패
