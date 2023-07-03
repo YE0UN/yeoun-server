@@ -100,7 +100,7 @@ router.get('/', asyncHandler(async (req, res) =>{
 /* 특정 게시물 보기 */
 router.get('/:postId', asyncHandler(async (req, res) =>{
     const result = await Post.findById(req.params.postId)
-                                .populate('user', 'nickname profileImage');
+                                .populate('user', 'nickname profileImage introduction');
     // 게시물 찾기 실패
     if (!result) {
         res.status(statusCode.NOT_FOUND);
