@@ -165,7 +165,7 @@ router.get('/', asyncHandler(async (req, res) => {
 /* 특정 게시물 보기 */
 router.get('/:postId', asyncHandler(async (req, res) => {
     const post = await Post.findById(req.params.postId)
-                                .populate('user', 'nickname profileImage')
+                                .populate('user', 'nickname profileImage introduction')
                                 .populate({
                                     path: 'comments',
                                     select: 'content createdAt',
