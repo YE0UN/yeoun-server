@@ -9,6 +9,7 @@ const cors = require('cors');
 const postsRouter = require('./routes/posts');
 const usersRouter = require('./routes/users');
 const commentsRouter = require('./routes/comments');
+const likesRouter = require('./routes/likes');
 
 const app = express();
 
@@ -44,6 +45,7 @@ app.use(express.static(path.join(__dirname, '../yeoun-client/build')));
 app.use('/posts', postsRouter);
 app.use('/users', usersRouter);
 app.use('/comments', commentsRouter);
+app.use('/likes', likesRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
