@@ -42,7 +42,20 @@ const PostSchema = new Schema({
     commentCount: {
         type: Number,
         default: 0,
-    }
+    },
+
+    // 좋아요
+    likes: [{
+        type:Schema.Types.ObjectId,
+        ref:'User'
+    }],
+
+    // 좋아요 수
+    likeCount: {
+        type: Number,
+        default: 0,
+    },
+    
 }, { 
 	timestamps: true,
 });

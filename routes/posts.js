@@ -41,16 +41,16 @@ router.get('/', asyncHandler(async (req, res) => {
                     }).populate('user', 'nickname profileImage introduction').sort({commentCount: -1});
                     break;
     
-                // case "like":
-                //     result = await Post.find({
-                //     siDo: siDo,
-                //     $or: [
-                //         // i: 대소문자 구별X
-                //         { title: {$regex: new RegExp(`${keyword}`, "i"), } },
-                //         { content: {$regex: new RegExp(`${keyword}`, "i"), } }
-                //     ],
-                // }).populate('user', 'nickname profileImage introduction').sort({likeCount: -1});
-                //     break;
+                case "like":
+                    result = await Post.find({
+                        siDo: siDo,
+                        $or: [
+                            // i: 대소문자 구별X
+                            { title: {$regex: new RegExp(`${keyword}`, "i"), } },
+                            { content: {$regex: new RegExp(`${keyword}`, "i"), } }
+                        ],
+                    }).populate('user', 'nickname profileImage introduction').sort({likeCount: -1});
+                    break;
             }
             return res.json(result);
         }
@@ -81,11 +81,11 @@ router.get('/', asyncHandler(async (req, res) => {
                     }).populate('user', 'nickname profileImage introduction').sort({commentCount: -1});
                     break;
     
-                // case "like":
-                //     result = await Post.find({
-                //     siDo: siDo,
-                // }).populate('user', 'nickname profileImage introduction').sort({likeCount: -1});
-                //     break;
+                case "like":
+                    result = await Post.find({
+                        siDo: siDo,
+                    }).populate('user', 'nickname profileImage introduction').sort({likeCount: -1});
+                    break;
             }
             return res.json(result);
         }
@@ -119,15 +119,15 @@ router.get('/', asyncHandler(async (req, res) => {
                     }).populate('user', 'nickname profileImage introduction').sort({commentCount: -1});
                     break;
     
-                // case "like":
-                //     result = await Post.find({
-                    //     $or: [
-                    //         // i: 대소문자 구별X
-                    //         { title: {$regex: new RegExp(`${keyword}`, "i"), } },
-                    //         { content: {$regex: new RegExp(`${keyword}`, "i"), } }
-                    //     ],
-                    // }).populate('user', 'nickname profileImage introduction').sort({likeCount: -1});
-                //     break;
+                case "like":
+                    result = await Post.find({
+                        $or: [
+                            // i: 대소문자 구별X
+                            { title: {$regex: new RegExp(`${keyword}`, "i"), } },
+                            { content: {$regex: new RegExp(`${keyword}`, "i"), } }
+                        ],
+                    }).populate('user', 'nickname profileImage introduction').sort({likeCount: -1});
+                    break;
             }
             return res.json(result);
         }
@@ -151,9 +151,9 @@ router.get('/', asyncHandler(async (req, res) => {
                 result = await Post.find().populate('user', 'nickname profileImage introduction').sort({commentCount: -1});
                 break;
 
-            // case "like":
-            //     result = await Post.find().populate('user', 'nickname profileImage introduction').sort({likeCount: -1});
-            //     break;
+            case "like":
+                result = await Post.find().populate('user', 'nickname profileImage introduction').sort({likeCount: -1});
+                break;
         }
         return res.json(result);
     }
