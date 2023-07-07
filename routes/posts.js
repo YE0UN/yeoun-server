@@ -195,8 +195,7 @@ router.post('/', asyncHandler(async (req, res) => {
     }
 
     // 회원 존재 확인
-    const user = await User.findById(userId);
-    if (!user) {
+    if (!await User.exists({ _id: userId })) {
         res.status(statusCode.NOT_FOUND);
         return res.json({error: "존재하지 않는 회원입니다."});
     }
@@ -216,7 +215,7 @@ router.post('/', asyncHandler(async (req, res) => {
         title,
         content,
         img,
-        user,
+        user: userId,
     });
 
     console.log('게시물 작성 완료');
@@ -242,14 +241,13 @@ router.put('/:postId', asyncHandler(async (req, res) => {
     }
 
     // 회원 존재 확인
-    const user = await User.findById(userId);
-    if (!user) {
+    if (!await User.exists({ _id: userId })) {
         res.status(statusCode.NOT_FOUND);
         return res.json({error: "존재하지 않는 회원입니다."});
     }
 
     // 게시물 작성자와 로그인 유저 일치하는지
-    if (!post.user._id.equals(userId)) {
+    if (!post.user.equals(userId)) {
         res.status(statusCode.FORBIDDEN);
         return res.json({error: "수정할 권한이 없습니다."});
     }
@@ -291,14 +289,13 @@ router.delete('/:postId', asyncHandler(async (req, res) => {
     }
 
     // 회원 존재 확인
-    const user = await User.findById(userId);
-    if (!user) {
+    if (!await User.exists({ _id: userId })) {
         res.status(statusCode.NOT_FOUND);
         return res.json({error: "존재하지 않는 회원입니다."});
     }
 
     // 게시물 작성자와 로그인 유저 일치하는지
-    if (!post.user._id.equals(userId)) {
+    if (!post.user.equals(userId)) {
         res.status(statusCode.FORBIDDEN);
         return res.json({error: "삭제할 권한이 없습니다."});
     }

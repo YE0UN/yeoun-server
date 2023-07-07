@@ -27,8 +27,7 @@ router.post('/:postId', asyncHandler(async (req, res) => {
     }
 
     // 회원 존재 확인
-    const user = await User.findById(userId);
-    if (!user) {
+    if (!await User.exists({ _id: userId })) {
         res.status(statusCode.NOT_FOUND);
         return res.json({error: "존재하지 않는 회원입니다."});
     }
@@ -41,7 +40,7 @@ router.post('/:postId', asyncHandler(async (req, res) => {
 
     const comment = await Comment.create({
         content,
-        user,
+        user: userId,
         post,
     });
 
@@ -74,19 +73,18 @@ router.delete('/:commentId', asyncHandler(async (req, res) => {
     }
 
     // 회원 존재 확인
-    const user = await User.findById(userId);
-    if (!user) {
+    if (!await User.exists({ _id: userId })) {
         res.status(statusCode.NOT_FOUND);
         return res.json({error: "존재하지 않는 회원입니다."});
     }
 
     // 댓글 작성자와 로그인 유저 일치하는지
-    if (!comment.user._id.equals(userId)) {
+    if (!comment.user.equals(userId)) {
         res.status(statusCode.FORBIDDEN);
         return res.json({error: "삭제할 수 없음"});
     }
 
-    const post = await Post.findById(comment.post._id);
+    const post = await Post.findById(comment.post);
     // Comment에서 댓글 삭제
     await Comment.deleteOne(comment);
     // Post 댓글 업데이트

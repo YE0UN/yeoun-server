@@ -4,6 +4,7 @@ const router = Router();
 const User = require('../models/User');
 const Post = require('../models/Post');
 const Comment = require('../models/Comment');
+const Collection = require('../models/Collection');
 
 const asyncHandler = require('../utils/async-handler');
 const hashPassword = require('../utils/hash-password');
@@ -105,32 +106,38 @@ router.put('/:userId/profile/pw', asyncHandler(async(req, res) => {
 
 //마이페이지
 router.get('/:userId/posts', asyncHandler(async(req, res) => {
-  const user = await User.findById(req.params.userId);
+  const { userId } = req.params;
 
-  if(!user) {
+  if (!await User.exists({ _id: userId })) {
     return res.status(404).json({error: "존재하지 않는 회원입니다."});
   }
 
-  const posts = await Post.find({user: user._id});
-  res.json({posts});
+  const posts = await Post.find({user: userId});
+  res.json(posts);
 }))
 
 //댓글
 router.get('/:userId/comments', asyncHandler(async(req, res) => {
-  const user = await User.findById(req.params.userId);
+  const { userId } = req.params;
 
-  if(!user) {
+  if (!await User.exists({ _id: userId })) {
     return res.status(404).json({error: "존재하지 않는 회원입니다."});
   }
 
-  const comments = await Comment.find({user: user._id})
-  res.json({comments});
+  const comments = await Comment.find({user: userId}).populate('post', 'title');
+  res.json(comments);
 }))
 
-/*스크랩
-router.get('/:userId/scraps', asyncHandler(async(req, res) => {
+//스크랩
+router.get('/:userId/scraps', asyncHandler(async (req, res) => {
+  const { userId } = req.params;
 
-}))
-*/
+  if (!await User.exists({ _id: userId })) {
+    return res.status(404).json({error: "존재하지 않는 회원입니다."});
+  }
+
+  const posts = await Collection.find({user: userId}).populate('posts');
+  res.json(posts);
+}));
 
 module.exports = router;
