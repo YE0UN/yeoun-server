@@ -1,7 +1,6 @@
 const { Router } = require('express');
 const router = Router();
 
-const Post = require('../../models/Post');
 const User = require('../../models/User');
 const Collection = require('../../models/Collection');
 

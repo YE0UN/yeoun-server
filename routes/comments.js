@@ -45,9 +45,8 @@ router.post('/:postId', asyncHandler(async (req, res) => {
     });
 
     // Post 댓글 업데이트
-    const comments = await Comment.find({ post: post });
-    post.comments = comments;
-    post.commentCount = comments.length;
+    post.comments.push(comment);
+    post.commentCount++;
     await post.save();
 
     console.log('댓글 작성 완료');
@@ -57,14 +56,15 @@ router.post('/:postId', asyncHandler(async (req, res) => {
 
 /* 댓글 삭제하기 */
 router.delete('/:commentId', asyncHandler(async (req, res) => {
-    const comment = await Comment.findById(req.params.commentId);
+    const { commentId } = req.params;
+    const { userId } = req.body;
+
+    const comment = await Comment.findById(commentId);
     // 댓글 찾기 실패
     if (!comment) {
         res.status(statusCode.NOT_FOUND);
         return res.json({error: "해당 댓글 없음"});
     }
-
-    const { userId } = req.body;
 
     // 로그인 여부 확인
     if (!userId) {
@@ -84,14 +84,14 @@ router.delete('/:commentId', asyncHandler(async (req, res) => {
         return res.json({error: "삭제할 수 없음"});
     }
 
-    const post = await Post.findById(comment.post);
+    // Post 댓글 업데이트
+    const post = await Post.findById(comment.post._id);
+    post.comments.splice(post.comments.indexOf(commentId), 1);
+    post.commentCount--;
+    await post.save();
+
     // Comment에서 댓글 삭제
     await Comment.deleteOne(comment);
-    // Post 댓글 업데이트
-    const comments = await Comment.find({ post: post });
-    post.comments = comments;
-    post.commentCount = comments.length;
-    await post.save();
     
     console.log('댓글 삭제 완료');
     res.json(post);
