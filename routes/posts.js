@@ -14,6 +14,7 @@ const statusCode = require('../utils/status-code');
 router.get('/', asyncHandler(async (req, res) => {
     
     const {siDo, keyword, sort} = req.query;
+    const {userId} = req.body;
     let posts;
     
     // 지역별 & 검색별
@@ -54,7 +55,25 @@ router.get('/', asyncHandler(async (req, res) => {
                     }).populate('user', 'nickname profileImage introduction').sort({likeCount: -1});
                     break;
             }
-            return res.json(posts);
+            return res.json(await Promise.all(
+            posts.map(async(post) => {
+    
+                let likeState = false;
+                let scrap = false;
+
+                // 유저의 좋아요 여부
+                if (await Like.exists({user: userId, post: post})) {
+                    likeState = true;
+                }
+
+                // 유저의 스크랩 여부
+                if (await Collection.exists({user: userId, posts: post})) {
+                    scrap = true;
+                }                
+                
+                return {post, likeState, scrap};
+            })
+        ));
         }
         posts = await Post.find({
             siDo: siDo,
@@ -64,7 +83,25 @@ router.get('/', asyncHandler(async (req, res) => {
                 { content: {$regex: new RegExp(`${keyword}`, "i"), } }
             ],
         }).populate('user', 'nickname profileImage introduction');
-        return res.json(posts);
+        return res.json(await Promise.all(
+            posts.map(async(post) => {
+    
+                let likeState = false;
+                let scrap = false;
+
+                // 유저의 좋아요 여부
+                if (await Like.exists({user: userId, post: post})) {
+                    likeState = true;
+                }
+
+                // 유저의 스크랩 여부
+                if (await Collection.exists({user: userId, posts: post})) {
+                    scrap = true;
+                }
+
+                return {post, likeState, scrap};
+            })
+        ));
     }
     // 지역별
     if (siDo) {
@@ -89,12 +126,48 @@ router.get('/', asyncHandler(async (req, res) => {
                     }).populate('user', 'nickname profileImage introduction').sort({likeCount: -1});
                     break;
             }
-            return res.json(posts);
+            return res.json(await Promise.all(
+                posts.map(async(post) => {
+        
+                    let likeState = false;
+                    let scrap = false;
+    
+                    // 유저의 좋아요 여부
+                    if (await Like.exists({user: userId, post: post})) {
+                        likeState = true;
+                    }
+    
+                    // 유저의 스크랩 여부
+                    if (await Collection.exists({user: userId, posts: post})) {
+                        scrap = true;
+                    }
+
+                    return {post, likeState, scrap};
+                })
+            ));
         }
         posts = await Post.find({
             siDo: siDo,
         }).populate('user', 'nickname profileImage introduction');
-        return res.json(posts);
+        return res.json(await Promise.all(
+            posts.map(async(post) => {
+    
+                let likeState = false;
+                let scrap = false;
+
+                // 유저의 좋아요 여부
+                if (await Like.exists({user: userId, post: post})) {
+                    likeState = true;
+                }
+
+                // 유저의 스크랩 여부
+                if (await Collection.exists({user: userId, posts: post})) {
+                    scrap = true;
+                }
+
+                return {post, likeState, scrap};
+            })
+        ));
     }
     // 검색별
     if (keyword) {
@@ -131,7 +204,25 @@ router.get('/', asyncHandler(async (req, res) => {
                     }).populate('user', 'nickname profileImage introduction').sort({likeCount: -1});
                     break;
             }
-            return res.json(posts);
+            return res.json(await Promise.all(
+                posts.map(async(post) => {
+        
+                    let likeState = false;
+                    let scrap = false;
+    
+                    // 유저의 좋아요 여부
+                    if (await Like.exists({user: userId, post: post})) {
+                        likeState = true;
+                    }
+    
+                    // 유저의 스크랩 여부
+                    if (await Collection.exists({user: userId, posts: post})) {
+                        scrap = true;
+                    }
+
+                    return {post, likeState, scrap};
+                })
+            ));
         }
         posts = await Post.find({
             $or: [
@@ -140,7 +231,25 @@ router.get('/', asyncHandler(async (req, res) => {
                 { content: {$regex: new RegExp(`${keyword}`, "i"), } }
             ],
         }).populate('user', 'nickname profileImage introduction');
-        return res.json(posts);
+        return res.json(await Promise.all(
+            posts.map(async(post) => {
+    
+                let likeState = false;
+                let scrap = false;
+
+                // 유저의 좋아요 여부
+                if (await Like.exists({user: userId, post: post})) {
+                    likeState = true;
+                }
+
+                // 유저의 스크랩 여부
+                if (await Collection.exists({user: userId, posts: post})) {
+                    scrap = true;
+                }
+
+                return {post, likeState, scrap};
+            })
+        ));
     }
     // 정렬 (최신순, 인기순, 댓글순)
     if (sort) {
@@ -157,11 +266,46 @@ router.get('/', asyncHandler(async (req, res) => {
                 posts = await Post.find().populate('user', 'nickname profileImage introduction').sort({likeCount: -1});
                 break;
         }
-        return res.json(posts);
+        return res.json(await Promise.all(
+            posts.map(async(post) => {
+    
+                let likeState = false;
+                let scrap = false;
+
+                // 유저의 좋아요 여부
+                if (await Like.exists({user: userId, post: post})) {
+                    likeState = true;
+                }
+
+                // 유저의 스크랩 여부
+                if (await Collection.exists({user: userId, posts: post})) {
+                    scrap = true;
+                }
+    
+                return {post, likeState, scrap};
+            })
+        ));
     }
     // 모든 게시물
     posts = await Post.find().populate('user', 'nickname profileImage introduction');
-    res.json(posts);
+    res.json(await Promise.all(
+        posts.map(async(post) => {   
+            let likeState = false;
+            let scrap = false;
+
+            // 유저의 좋아요 여부
+            if (await Like.exists({user: userId, post: post})) {
+                likeState = true;
+            }
+
+            // 유저의 스크랩 여부
+            if (await Collection.exists({user: userId, posts: post})) {
+                scrap = true;
+            }
+
+            return {post, likeState, scrap};
+        })
+    ));
 }));
 
 /* 특정 게시물 보기 */
