@@ -3,6 +3,7 @@ const router = Router();
 
 const User = require('../models/User');
 const Post = require('../models/Post');
+const Like = require('../models/Like');
 const Comment = require('../models/Comment');
 const Collection = require('../models/Collection');
 
@@ -112,8 +113,25 @@ router.get('/:userId/posts', asyncHandler(async(req, res) => {
     return res.status(404).json({error: "존재하지 않는 회원입니다."});
   }
 
-  const posts = await Post.find({user: userId});
-  res.json(posts);
+  const posts = await Post.find({user: userId}).populate('user', 'nickname profileImage introduction').sort({createdAt: -1});
+  res.json(await Promise.all(
+    posts.map(async(post) => {   
+        let likeState = false;
+        let scrap = false;
+
+        // 유저의 좋아요 여부
+        if (await Like.exists({user: userId, post: post})) {
+            likeState = true;
+        }
+
+        // 유저의 스크랩 여부
+        if (await Collection.exists({user: userId, posts: post})) {
+            scrap = true;
+        }
+
+        return {post, likeState, scrap};
+    })
+  ));
 }))
 
 //댓글
@@ -124,7 +142,7 @@ router.get('/:userId/comments', asyncHandler(async(req, res) => {
     return res.status(404).json({error: "존재하지 않는 회원입니다."});
   }
 
-  const comments = await Comment.find({user: userId}).populate('post', 'title');
+  const comments = await Comment.find({user: userId}).populate('post', 'title').sort({createdAt: -1});
   res.json(comments);
 }))
 
@@ -136,8 +154,24 @@ router.get('/:userId/scraps', asyncHandler(async (req, res) => {
     return res.status(404).json({error: "존재하지 않는 회원입니다."});
   }
 
-  const posts = await Collection.find({user: userId}).populate('posts');
-  res.json(posts);
+  const collections = await Collection.find({user: userId})
+                                        .populate({path: 'posts', options: { sort: { 'createdAt': -1 } }, 
+                                                  populate: {path: 'user', select: 'nickname profileImage introduction'}});
+  res.json(await Promise.all(
+    collections.map(async(collection) => {
+      let result = { name: collection.name };
+      result.posts = await Promise.all(
+        collection.posts.map(async(post) => {   
+            let likeState = false;
+            if (await Like.exists({user: userId, post: post})) {
+                likeState = true;
+            }
+            return {post, likeState};
+        })
+      )
+      return result;
+    })
+  ));
 }));
 
 module.exports = router;
