@@ -154,7 +154,7 @@ router.get('/:userId/scraps', asyncHandler(async (req, res) => {
     return res.status(404).json({error: "존재하지 않는 회원입니다."});
   }
 
-  const collections = await Collection.find({user: userId})
+  const collections = await Collection.find({user: userId}).sort({createdAt: -1})
                                         .populate({path: 'posts', options: { sort: { 'createdAt': -1 } }, 
                                                   populate: {path: 'user', select: 'nickname profileImage introduction'}});
   res.json(await Promise.all(
@@ -162,11 +162,20 @@ router.get('/:userId/scraps', asyncHandler(async (req, res) => {
       let result = { name: collection.name };
       result.posts = await Promise.all(
         collection.posts.map(async(post) => {   
-            let likeState = false;
-            if (await Like.exists({user: userId, post: post})) {
-                likeState = true;
-            }
-            return {post, likeState};
+          let likeState = false;
+          let scrap = false;
+  
+          // 유저의 좋아요 여부
+          if (await Like.exists({user: userId, post: post})) {
+              likeState = true;
+          }
+  
+          // 유저의 스크랩 여부
+          if (await Collection.exists({user: userId, posts: post})) {
+              scrap = true;
+          }
+  
+          return {post, likeState, scrap};
         })
       )
       return result;
