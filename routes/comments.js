@@ -27,8 +27,7 @@ router.post('/:postId', asyncHandler(async (req, res) => {
     }
 
     // 회원 존재 확인
-    const user = await User.findById(userId);
-    if (!user) {
+    if (!await User.exists({ _id: userId })) {
         res.status(statusCode.NOT_FOUND);
         return res.json({error: "존재하지 않는 회원입니다."});
     }
@@ -41,14 +40,13 @@ router.post('/:postId', asyncHandler(async (req, res) => {
 
     const comment = await Comment.create({
         content,
-        user,
+        user: userId,
         post,
     });
 
     // Post 댓글 업데이트
-    const comments = await Comment.find({ post: post });
-    post.comments = comments;
-    post.commentCount = comments.length;
+    post.comments.push(comment);
+    post.commentCount++;
     await post.save();
 
     console.log('댓글 작성 완료');
@@ -58,14 +56,15 @@ router.post('/:postId', asyncHandler(async (req, res) => {
 
 /* 댓글 삭제하기 */
 router.delete('/:commentId', asyncHandler(async (req, res) => {
-    const comment = await Comment.findById(req.params.commentId);
+    const { commentId } = req.params;
+    const { userId } = req.body;
+
+    const comment = await Comment.findById(commentId);
     // 댓글 찾기 실패
     if (!comment) {
         res.status(statusCode.NOT_FOUND);
         return res.json({error: "해당 댓글 없음"});
     }
-
-    const { userId } = req.body;
 
     // 로그인 여부 확인
     if (!userId) {
@@ -74,26 +73,25 @@ router.delete('/:commentId', asyncHandler(async (req, res) => {
     }
 
     // 회원 존재 확인
-    const user = await User.findById(userId);
-    if (!user) {
+    if (!await User.exists({ _id: userId })) {
         res.status(statusCode.NOT_FOUND);
         return res.json({error: "존재하지 않는 회원입니다."});
     }
 
     // 댓글 작성자와 로그인 유저 일치하는지
-    if (!comment.user._id.equals(userId)) {
+    if (!comment.user.equals(userId)) {
         res.status(statusCode.FORBIDDEN);
         return res.json({error: "삭제할 수 없음"});
     }
 
+    // Post 댓글 업데이트
     const post = await Post.findById(comment.post._id);
+    post.comments.splice(post.comments.indexOf(commentId), 1);
+    post.commentCount--;
+    await post.save();
+
     // Comment에서 댓글 삭제
     await Comment.deleteOne(comment);
-    // Post 댓글 업데이트
-    const comments = await Comment.find({ post: post });
-    post.comments = comments;
-    post.commentCount = comments.length;
-    await post.save();
     
     console.log('댓글 삭제 완료');
     res.json(post);
