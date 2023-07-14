@@ -106,8 +106,8 @@ router.put('/:userId/profile/pw', asyncHandler(async(req, res) => {
 
 
 //마이페이지
-router.get('/:userId/posts', asyncHandler(async(req, res) => {
-  const { userId } = req.params;
+router.get('/posts', asyncHandler(async(req, res) => {
+  const { userId } = req.body;
 
   if (!await User.exists({ _id: userId })) {
     return res.status(404).json({error: "존재하지 않는 회원입니다."});
@@ -147,8 +147,8 @@ router.get('/:userId/comments', asyncHandler(async(req, res) => {
 }))
 
 //스크랩
-router.get('/:userId/scraps', asyncHandler(async (req, res) => {
-  const { userId } = req.params;
+router.get('/scraps', asyncHandler(async (req, res) => {
+  const { userId } = req.body;
 
   if (!await User.exists({ _id: userId })) {
     return res.status(404).json({error: "존재하지 않는 회원입니다."});
