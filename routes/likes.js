@@ -2,15 +2,36 @@ const { Router } = require('express');
 const router = Router();
 
 const Post = require('../models/Post');
+const User = require('../models/User');
 const Like = require('../models/Like');
 
 const asyncHandler = require('../utils/async-handler');
+const statusCode = require('../utils/status-code');
 
 /* 좋아요 토글링 */
 router.post('/:postId', asyncHandler(async(req, res) => {
     const { userId } = req.body;
     const { postId }  = req.params;
     let result = {};
+
+    // 로그인 여부 확인
+    if (!userId) {
+        res.status(statusCode.UNAUTHORIZED);
+        return res.json({error: "로그인이 필요합니다."});
+    }
+
+    // 회원 존재 확인
+    if (!await User.exists({ _id: userId })) {
+        res.status(statusCode.NOT_FOUND);
+        return res.json({error: "존재하지 않는 회원입니다."});
+    }
+
+    // 게시물 존재 확인
+    if (!await Post.exists({ _id: postId })) {
+        res.status(statusCode.NOT_FOUND);
+        return res.json({error: "해당 게시물이 없습니다."});
+    }
+
     const isLiked = await Like.findOne({user: userId, post: postId});
     const post = await Post.findById(postId);
 

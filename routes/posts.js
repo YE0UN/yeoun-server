@@ -69,7 +69,7 @@ router.get('/', asyncHandler(async (req, res) => {
                             {title: {$regex: new RegExp(`${keyword}`, "i"), }},
                             {content: {$regex: new RegExp(`${keyword}`, "i"), }}
                         ],
-                    }).populate('user', 'nickname profileImage introduction').sort({commentCount: -1}).skip((page - 1) * perPage).limit(perPage);
+                    }).populate('user', 'nickname profileImage introduction').sort({commentCount: -1, createdAt: -1}).skip((page - 1) * perPage).limit(perPage);
                     break;
     
                 case "like":
@@ -79,7 +79,7 @@ router.get('/', asyncHandler(async (req, res) => {
                             {title: {$regex: new RegExp(`${keyword}`, "i"), }},
                             {content: {$regex: new RegExp(`${keyword}`, "i"), }}
                         ],
-                    }).populate('user', 'nickname profileImage introduction').sort({likeCount: -1}).skip((page - 1) * perPage).limit(perPage);
+                    }).populate('user', 'nickname profileImage introduction').sort({likeCount: -1, createdAt: -1}).skip((page - 1) * perPage).limit(perPage);
                     break;
             }
             result = await Promise.all(
@@ -168,13 +168,13 @@ router.get('/', asyncHandler(async (req, res) => {
                 case "comment":
                     posts = await Post.find({
                         siDo: siDo,
-                    }).populate('user', 'nickname profileImage introduction').sort({commentCount: -1}).skip((page - 1) * perPage).limit(perPage);
+                    }).populate('user', 'nickname profileImage introduction').sort({commentCount: -1, createdAt: -1}).skip((page - 1) * perPage).limit(perPage);
                     break;
     
                 case "like":
                     posts = await Post.find({
                         siDo: siDo,
-                    }).populate('user', 'nickname profileImage introduction').sort({likeCount: -1}).skip((page - 1) * perPage).limit(perPage);
+                    }).populate('user', 'nickname profileImage introduction').sort({likeCount: -1, createdAt: -1}).skip((page - 1) * perPage).limit(perPage);
                     break;
             }
             result = await Promise.all(
@@ -261,7 +261,7 @@ router.get('/', asyncHandler(async (req, res) => {
                             {title: {$regex: new RegExp(`${keyword}`, "i"), }},
                             {content: {$regex: new RegExp(`${keyword}`, "i"), }}
                         ],
-                    }).populate('user', 'nickname profileImage introduction').sort({commentCount: -1}).skip((page - 1) * perPage).limit(perPage);
+                    }).populate('user', 'nickname profileImage introduction').sort({commentCount: -1, createdAt: -1}).skip((page - 1) * perPage).limit(perPage);
                     break;
     
                 case "like":
@@ -270,7 +270,7 @@ router.get('/', asyncHandler(async (req, res) => {
                             {title: {$regex: new RegExp(`${keyword}`, "i"), }},
                             {content: {$regex: new RegExp(`${keyword}`, "i"), }}
                         ],
-                    }).populate('user', 'nickname profileImage introduction').sort({likeCount: -1}).skip((page - 1) * perPage).limit(perPage);
+                    }).populate('user', 'nickname profileImage introduction').sort({likeCount: -1, createdAt: -1}).skip((page - 1) * perPage).limit(perPage);
                     break;
             }
             result = await Promise.all(
@@ -346,11 +346,11 @@ router.get('/', asyncHandler(async (req, res) => {
                 break;
                 
             case "comment":
-                posts = await Post.find().populate('user', 'nickname profileImage introduction').sort({commentCount: -1}).skip((page - 1) * perPage).limit(perPage);
+                posts = await Post.find().populate('user', 'nickname profileImage introduction').sort({commentCount: -1, createdAt: -1}).skip((page - 1) * perPage).limit(perPage);
                 break;
 
             case "like":
-                posts = await Post.find().populate('user', 'nickname profileImage introduction').sort({likeCount: -1}).skip((page - 1) * perPage).limit(perPage);
+                posts = await Post.find().populate('user', 'nickname profileImage introduction').sort({likeCount: -1, createdAt: -1}).skip((page - 1) * perPage).limit(perPage);
                 break;
         }
         result = await Promise.all(
