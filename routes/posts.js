@@ -41,7 +41,7 @@ router.get('/', asyncHandler(async (req, res) => {
                             { title: {$regex: new RegExp(`${keyword}`, "i"), } },
                             { content: {$regex: new RegExp(`${keyword}`, "i"), } }
                         ],
-                    }).populate('user', 'nickname profileImage introduction').sort({commentCount: -1});
+                    }).populate('user', 'nickname profileImage introduction').sort({commentCount: -1, createdAt: -1});
                     break;
     
                 case "like":
@@ -52,7 +52,7 @@ router.get('/', asyncHandler(async (req, res) => {
                             { title: {$regex: new RegExp(`${keyword}`, "i"), } },
                             { content: {$regex: new RegExp(`${keyword}`, "i"), } }
                         ],
-                    }).populate('user', 'nickname profileImage introduction').sort({likeCount: -1});
+                    }).populate('user', 'nickname profileImage introduction').sort({likeCount: -1, createdAt: -1});
                     break;
             }
             return res.json(await Promise.all(
@@ -117,13 +117,13 @@ router.get('/', asyncHandler(async (req, res) => {
                 case "comment":
                     posts = await Post.find({
                         siDo: siDo,
-                    }).populate('user', 'nickname profileImage introduction').sort({commentCount: -1});
+                    }).populate('user', 'nickname profileImage introduction').sort({commentCount: -1, createdAt: -1});
                     break;
     
                 case "like":
                     posts = await Post.find({
                         siDo: siDo,
-                    }).populate('user', 'nickname profileImage introduction').sort({likeCount: -1});
+                    }).populate('user', 'nickname profileImage introduction').sort({likeCount: -1, createdAt: -1});
                     break;
             }
             return res.json(await Promise.all(
@@ -191,7 +191,7 @@ router.get('/', asyncHandler(async (req, res) => {
                             { title: {$regex: new RegExp(`${keyword}`, "i"), } },
                             { content: {$regex: new RegExp(`${keyword}`, "i"), } }
                         ],
-                    }).populate('user', 'nickname profileImage introduction').sort({commentCount: -1});
+                    }).populate('user', 'nickname profileImage introduction').sort({commentCount: -1, createdAt: -1});
                     break;
     
                 case "like":
@@ -201,7 +201,7 @@ router.get('/', asyncHandler(async (req, res) => {
                             { title: {$regex: new RegExp(`${keyword}`, "i"), } },
                             { content: {$regex: new RegExp(`${keyword}`, "i"), } }
                         ],
-                    }).populate('user', 'nickname profileImage introduction').sort({likeCount: -1});
+                    }).populate('user', 'nickname profileImage introduction').sort({likeCount: -1, createdAt: -1});
                     break;
             }
             return res.json(await Promise.all(
@@ -259,11 +259,11 @@ router.get('/', asyncHandler(async (req, res) => {
                 break;
                 
             case "comment":
-                posts = await Post.find().populate('user', 'nickname profileImage introduction').sort({commentCount: -1});
+                posts = await Post.find().populate('user', 'nickname profileImage introduction').sort({commentCount: -1, createdAt: -1});
                 break;
 
             case "like":
-                posts = await Post.find().populate('user', 'nickname profileImage introduction').sort({likeCount: -1});
+                posts = await Post.find().populate('user', 'nickname profileImage introduction').sort({likeCount: -1, createdAt: -1});
                 break;
         }
         return res.json(await Promise.all(
