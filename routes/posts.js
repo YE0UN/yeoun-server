@@ -21,6 +21,11 @@ router.get('/', asyncHandler(async (req, res) => {
     const perPage = 9;
     let countPosts, maxPage;
 
+    // 페이지 번호 없는 경우
+    if (!page) {
+        res.status(statusCode.BAD_REQUEST);
+        return res.json({error: "페이지 번호를 입력해주세요."});
+    }
     // 페이지 범위 미달
     if (page < 1) {
         res.status(statusCode.BAD_REQUEST);
