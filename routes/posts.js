@@ -13,299 +13,392 @@ const statusCode = require('../utils/status-code');
 /* 모든 게시물 보기 + 지역별, 검색, 정렬 */
 router.get('/', asyncHandler(async (req, res) => {
     
-    const {siDo, keyword, sort} = req.query;
+    const {siDo, keyword, sort, page} = req.query;
     const {userId} = req.body;
-    let posts;
+    let posts, result;
+
+    const currentPage = page;
+    const perPage = 9;
+    let countPosts, maxPage;
+
+    // 페이지 번호 없는 경우
+    if (!page) {
+        res.status(statusCode.BAD_REQUEST);
+        return res.json({error: "페이지 번호를 입력해주세요."});
+    }
+    // 페이지 범위 미달
+    if (page < 1) {
+        res.status(statusCode.BAD_REQUEST);
+        return res.json({error: "페이지 없음"});
+    }
     
     // 지역별 & 검색별
     if (siDo && keyword) {
         // + 정렬
         if (sort) {
+            countPosts = await Post.countDocuments({
+                siDo: siDo,
+                $or: [
+                    {title: {$regex: new RegExp(`${keyword}`, "i"), }},
+                    {content: {$regex: new RegExp(`${keyword}`, "i"), }}
+                ],
+            });
+            maxPage = Math.ceil(countPosts / perPage);
+            // 페이지 범위 초과
+            if (page > maxPage) {
+                res.status(statusCode.BAD_REQUEST);
+                return res.json({error: "페이지 없음"});
+            }
+
             switch (sort) {
                 case "createdAt": 
                     posts = await Post.find({
                         siDo: siDo,
                         $or: [
                             // i: 대소문자 구별X
-                            { title: {$regex: new RegExp(`${keyword}`, "i"), } },
-                            { content: {$regex: new RegExp(`${keyword}`, "i"), } }
+                            {title: {$regex: new RegExp(`${keyword}`, "i"), }},
+                            {content: {$regex: new RegExp(`${keyword}`, "i"), }}
                         ],
-                    }).populate('user', 'nickname profileImage introduction').sort({createdAt: -1});
+                    }).populate('user', 'nickname profileImage introduction').sort({createdAt: -1}).skip((page - 1) * perPage).limit(perPage);
                     break;
                     
                 case "comment":
                     posts = await Post.find({
                         siDo: siDo,
                         $or: [
-                            // i: 대소문자 구별X
-                            { title: {$regex: new RegExp(`${keyword}`, "i"), } },
-                            { content: {$regex: new RegExp(`${keyword}`, "i"), } }
+                            {title: {$regex: new RegExp(`${keyword}`, "i"), }},
+                            {content: {$regex: new RegExp(`${keyword}`, "i"), }}
                         ],
-                    }).populate('user', 'nickname profileImage introduction').sort({commentCount: -1, createdAt: -1});
+                    }).populate('user', 'nickname profileImage introduction').sort({commentCount: -1, createdAt: -1}).skip((page - 1) * perPage).limit(perPage);
                     break;
     
                 case "like":
                     posts = await Post.find({
                         siDo: siDo,
                         $or: [
-                            // i: 대소문자 구별X
-                            { title: {$regex: new RegExp(`${keyword}`, "i"), } },
-                            { content: {$regex: new RegExp(`${keyword}`, "i"), } }
+                            {title: {$regex: new RegExp(`${keyword}`, "i"), }},
+                            {content: {$regex: new RegExp(`${keyword}`, "i"), }}
                         ],
-                    }).populate('user', 'nickname profileImage introduction').sort({likeCount: -1, createdAt: -1});
+                    }).populate('user', 'nickname profileImage introduction').sort({likeCount: -1, createdAt: -1}).skip((page - 1) * perPage).limit(perPage);
                     break;
             }
-            return res.json(await Promise.all(
-            posts.map(async(post) => {
-    
-                let likeState = false;
-                let scrap = false;
+            result = await Promise.all(
+                posts.map(async(post) => {
+        
+                    let likeState = false;
+                    let scrap = false;
 
-                // 유저의 좋아요 여부
-                if (await Like.exists({user: userId, post: post})) {
-                    likeState = true;
-                }
+                    // 유저의 좋아요 여부
+                    if (await Like.exists({user: userId, post: post})) {
+                        likeState = true;
+                    }
 
-                // 유저의 스크랩 여부
-                if (await Collection.exists({user: userId, posts: post})) {
-                    scrap = true;
-                }                
-                
-                return {post, likeState, scrap};
-            })
-        ));
+                    // 유저의 스크랩 여부
+                    if (await Collection.exists({user: userId, posts: post})) {
+                        scrap = true;
+                    }                
+                    
+                    return {post, likeState, scrap};
+                })
+            );
+            result.push({currentPage, maxPage});
+            return res.json(result);
         }
+        countPosts = await Post.countDocuments({
+            siDo: siDo,
+            $or: [
+                {title: {$regex: new RegExp(`${keyword}`, "i"), }},
+                {content: {$regex: new RegExp(`${keyword}`, "i"), }}
+            ],
+        });
+        maxPage = Math.ceil(countPosts / perPage);
+        // 페이지 범위 초과
+        if (page > maxPage) {
+            res.status(statusCode.BAD_REQUEST);
+            return res.json({error: "페이지 없음"});
+        } 
+
         posts = await Post.find({
             siDo: siDo,
             $or: [
-                // i: 대소문자 구별X
-                { title: {$regex: new RegExp(`${keyword}`, "i"), } },
-                { content: {$regex: new RegExp(`${keyword}`, "i"), } }
+                {title: {$regex: new RegExp(`${keyword}`, "i"), }},
+                {content: {$regex: new RegExp(`${keyword}`, "i"), }}
             ],
-        }).populate('user', 'nickname profileImage introduction');
-        return res.json(await Promise.all(
+        }).populate('user', 'nickname profileImage introduction').skip((page - 1) * perPage).limit(perPage);       
+        result = await Promise.all(
             posts.map(async(post) => {
     
                 let likeState = false;
                 let scrap = false;
 
-                // 유저의 좋아요 여부
                 if (await Like.exists({user: userId, post: post})) {
                     likeState = true;
                 }
-
-                // 유저의 스크랩 여부
                 if (await Collection.exists({user: userId, posts: post})) {
                     scrap = true;
                 }
 
                 return {post, likeState, scrap};
             })
-        ));
+        );
+        result.push({currentPage, maxPage});
+        return res.json(result);
     }
     // 지역별
     if (siDo) {
         // + 정렬
         if (sort) {
+            countPosts = await Post.countDocuments({
+                siDo: siDo,
+            });
+            maxPage = Math.ceil(countPosts / perPage);
+            // 페이지 범위 초과
+            if (page > maxPage) {
+                res.status(statusCode.BAD_REQUEST);
+                return res.json({error: "페이지 없음"});
+            }
+
             switch (sort) {
                 case "createdAt": 
                     posts = await Post.find({
                         siDo: siDo,
-                    }).populate('user', 'nickname profileImage introduction').sort({createdAt: -1});
+                    }).populate('user', 'nickname profileImage introduction').sort({createdAt: -1}).skip((page - 1) * perPage).limit(perPage);
                     break;
                     
                 case "comment":
                     posts = await Post.find({
                         siDo: siDo,
-                    }).populate('user', 'nickname profileImage introduction').sort({commentCount: -1, createdAt: -1});
+                    }).populate('user', 'nickname profileImage introduction').sort({commentCount: -1, createdAt: -1}).skip((page - 1) * perPage).limit(perPage);
                     break;
     
                 case "like":
                     posts = await Post.find({
                         siDo: siDo,
-                    }).populate('user', 'nickname profileImage introduction').sort({likeCount: -1, createdAt: -1});
+                    }).populate('user', 'nickname profileImage introduction').sort({likeCount: -1, createdAt: -1}).skip((page - 1) * perPage).limit(perPage);
                     break;
             }
-            return res.json(await Promise.all(
+            result = await Promise.all(
                 posts.map(async(post) => {
         
                     let likeState = false;
                     let scrap = false;
-    
-                    // 유저의 좋아요 여부
+
                     if (await Like.exists({user: userId, post: post})) {
                         likeState = true;
                     }
-    
-                    // 유저의 스크랩 여부
                     if (await Collection.exists({user: userId, posts: post})) {
                         scrap = true;
                     }
 
                     return {post, likeState, scrap};
                 })
-            ));
+            );
+            result.push({currentPage, maxPage});
+            return res.json(result);
         }
+        countPosts = await Post.countDocuments({
+            siDo: siDo,
+        });
+        maxPage = Math.ceil(countPosts / perPage);
+        // 페이지 범위 초과
+        if (page > maxPage) {
+            res.status(statusCode.BAD_REQUEST);
+            return res.json({error: "페이지 없음"});
+        }
+
         posts = await Post.find({
             siDo: siDo,
-        }).populate('user', 'nickname profileImage introduction');
-        return res.json(await Promise.all(
+        }).populate('user', 'nickname profileImage introduction').skip((page - 1) * perPage).limit(perPage);
+        result = await Promise.all(
             posts.map(async(post) => {
     
                 let likeState = false;
                 let scrap = false;
 
-                // 유저의 좋아요 여부
                 if (await Like.exists({user: userId, post: post})) {
                     likeState = true;
                 }
-
-                // 유저의 스크랩 여부
                 if (await Collection.exists({user: userId, posts: post})) {
                     scrap = true;
                 }
 
                 return {post, likeState, scrap};
             })
-        ));
+        );
+        result.push({currentPage, maxPage});
+        return res.json(result);
     }
     // 검색별
     if (keyword) {
         // + 정렬
         if (sort) {
+            countPosts = await Post.countDocuments({
+                $or: [
+                    {title: {$regex: new RegExp(`${keyword}`, "i"), }},
+                    {content: {$regex: new RegExp(`${keyword}`, "i"), }}
+                ],
+            });
+            maxPage = Math.ceil(countPosts / perPage);
+            // 페이지 범위 초과
+            if (page > maxPage) {
+                res.status(statusCode.BAD_REQUEST);
+                return res.json({error: "페이지 없음"});
+            }
+
             switch (sort) {
                 case "createdAt": 
                     posts = await Post.find({
                         $or: [
-                            // i: 대소문자 구별X
-                            { title: {$regex: new RegExp(`${keyword}`, "i"), } },
-                            { content: {$regex: new RegExp(`${keyword}`, "i"), } }
+                            {title: {$regex: new RegExp(`${keyword}`, "i"), }},
+                            {content: {$regex: new RegExp(`${keyword}`, "i"), }}
                         ],
-                    }).populate('user', 'nickname profileImage introduction').sort({createdAt: -1});
+                    }).populate('user', 'nickname profileImage introduction').sort({createdAt: -1}).skip((page - 1) * perPage).limit(perPage);
                     break;
                     
                 case "comment":
                     posts = await Post.find({
                         $or: [
-                            // i: 대소문자 구별X
-                            { title: {$regex: new RegExp(`${keyword}`, "i"), } },
-                            { content: {$regex: new RegExp(`${keyword}`, "i"), } }
+                            {title: {$regex: new RegExp(`${keyword}`, "i"), }},
+                            {content: {$regex: new RegExp(`${keyword}`, "i"), }}
                         ],
-                    }).populate('user', 'nickname profileImage introduction').sort({commentCount: -1, createdAt: -1});
+                    }).populate('user', 'nickname profileImage introduction').sort({commentCount: -1, createdAt: -1}).skip((page - 1) * perPage).limit(perPage);
                     break;
     
                 case "like":
                     posts = await Post.find({
                         $or: [
-                            // i: 대소문자 구별X
-                            { title: {$regex: new RegExp(`${keyword}`, "i"), } },
-                            { content: {$regex: new RegExp(`${keyword}`, "i"), } }
+                            {title: {$regex: new RegExp(`${keyword}`, "i"), }},
+                            {content: {$regex: new RegExp(`${keyword}`, "i"), }}
                         ],
-                    }).populate('user', 'nickname profileImage introduction').sort({likeCount: -1, createdAt: -1});
+                    }).populate('user', 'nickname profileImage introduction').sort({likeCount: -1, createdAt: -1}).skip((page - 1) * perPage).limit(perPage);
                     break;
             }
-            return res.json(await Promise.all(
+            result = await Promise.all(
                 posts.map(async(post) => {
         
                     let likeState = false;
                     let scrap = false;
-    
-                    // 유저의 좋아요 여부
+
                     if (await Like.exists({user: userId, post: post})) {
                         likeState = true;
                     }
-    
-                    // 유저의 스크랩 여부
                     if (await Collection.exists({user: userId, posts: post})) {
                         scrap = true;
                     }
 
                     return {post, likeState, scrap};
                 })
-            ));
+            );
+            result.push({currentPage, maxPage});
+            return res.json(result);
         }
+        countPosts = await Post.countDocuments({
+            $or: [
+                {title: {$regex: new RegExp(`${keyword}`, "i"), }},
+                {content: {$regex: new RegExp(`${keyword}`, "i"), }}
+            ],
+        });
+        maxPage = Math.ceil(countPosts / perPage);
+        // 페이지 범위 초과
+        if (page > maxPage) {
+            res.status(statusCode.BAD_REQUEST);
+            return res.json({error: "페이지 없음"});
+        }
+
         posts = await Post.find({
             $or: [
-                // i: 대소문자 구별X
-                { title: {$regex: new RegExp(`${keyword}`, "i"), } },
-                { content: {$regex: new RegExp(`${keyword}`, "i"), } }
+                {title: {$regex: new RegExp(`${keyword}`, "i"), }},
+                {content: {$regex: new RegExp(`${keyword}`, "i"), }}
             ],
-        }).populate('user', 'nickname profileImage introduction');
-        return res.json(await Promise.all(
+        }).populate('user', 'nickname profileImage introduction').skip((page - 1) * perPage).limit(perPage);
+        result = await Promise.all(
             posts.map(async(post) => {
     
                 let likeState = false;
                 let scrap = false;
 
-                // 유저의 좋아요 여부
                 if (await Like.exists({user: userId, post: post})) {
                     likeState = true;
                 }
-
-                // 유저의 스크랩 여부
                 if (await Collection.exists({user: userId, posts: post})) {
                     scrap = true;
                 }
 
                 return {post, likeState, scrap};
             })
-        ));
-    }
+        );
+        result.push({currentPage, maxPage});
+        return res.json(result);
+}
     // 정렬 (최신순, 인기순, 댓글순)
     if (sort) {
+        countPosts = await Post.countDocuments();
+        maxPage = Math.ceil(countPosts / perPage);
+        // 페이지 범위 초과
+        if (page > maxPage) {
+            res.status(statusCode.BAD_REQUEST);
+            return res.json({error: "페이지 없음"});
+        }
+
         switch (sort) {
             case "createdAt": 
-                posts = await Post.find().populate('user', 'nickname profileImage introduction').sort({createdAt: -1});
+                posts = await Post.find().populate('user', 'nickname profileImage introduction').sort({createdAt: -1}).skip((page - 1) * perPage).limit(perPage);
                 break;
                 
             case "comment":
-                posts = await Post.find().populate('user', 'nickname profileImage introduction').sort({commentCount: -1, createdAt: -1});
+                posts = await Post.find().populate('user', 'nickname profileImage introduction').sort({commentCount: -1, createdAt: -1}).skip((page - 1) * perPage).limit(perPage);
                 break;
 
             case "like":
-                posts = await Post.find().populate('user', 'nickname profileImage introduction').sort({likeCount: -1, createdAt: -1});
+                posts = await Post.find().populate('user', 'nickname profileImage introduction').sort({likeCount: -1, createdAt: -1}).skip((page - 1) * perPage).limit(perPage);
                 break;
         }
-        return res.json(await Promise.all(
+        result = await Promise.all(
             posts.map(async(post) => {
     
                 let likeState = false;
                 let scrap = false;
 
-                // 유저의 좋아요 여부
                 if (await Like.exists({user: userId, post: post})) {
                     likeState = true;
                 }
-
-                // 유저의 스크랩 여부
                 if (await Collection.exists({user: userId, posts: post})) {
                     scrap = true;
                 }
     
                 return {post, likeState, scrap};
             })
-        ));
+        );
+        result.push({currentPage, maxPage});
+        return res.json(result);
+}
+    // 모든 게시물 
+    countPosts = await Post.countDocuments();
+    maxPage = Math.ceil(countPosts / perPage);
+    // 페이지 범위 초과
+    if (page > maxPage || page < 1) {
+        res.status(statusCode.BAD_REQUEST);
+        return res.json({error: "페이지 없음"});
     }
-    // 모든 게시물
-    posts = await Post.find().populate('user', 'nickname profileImage introduction');
-    res.json(await Promise.all(
+
+    posts = await Post.find().populate('user', 'nickname profileImage introduction').skip((page - 1) * perPage).limit(perPage);
+    result = await Promise.all(
         posts.map(async(post) => {   
             let likeState = false;
             let scrap = false;
-
-            // 유저의 좋아요 여부
+            
             if (await Like.exists({user: userId, post: post})) {
                 likeState = true;
             }
-
-            // 유저의 스크랩 여부
             if (await Collection.exists({user: userId, posts: post})) {
                 scrap = true;
             }
 
             return {post, likeState, scrap};
         })
-    ));
+    );
+    result.push({currentPage, maxPage});
+    res.json(result);
 }));
 
 /* 특정 게시물 보기 */
@@ -361,12 +454,12 @@ router.post('/', asyncHandler(async (req, res) => {
         return res.json({error: "존재하지 않는 회원입니다."});
     }
 
-    // 필수 작성 validation
+    // 필수 작성 validation + 공백 막기
     if (!siDo) {
         res.status(statusCode.BAD_REQUEST);
         return res.json({error: "지역을 선택하세요."});
     }
-    if (!content) {
+    if (!content.trim()) {
         res.status(statusCode.BAD_REQUEST);
         return res.json({error: "내용을 입력하세요."});
     }
@@ -413,12 +506,12 @@ router.put('/:postId', asyncHandler(async (req, res) => {
         return res.json({error: "수정할 권한이 없습니다."});
     }
 
-    // 필수 작성 validation
+    // 필수 작성 validation + 공백 막기
     if (!siDo) {
         res.status(statusCode.BAD_REQUEST);
         return res.json({error: "지역을 선택하세요."});
     }
-    if (!content) {
+    if (!content.trim()) {
         res.status(statusCode.BAD_REQUEST);
         return res.json({error: "내용을 입력하세요."});
     }

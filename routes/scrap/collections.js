@@ -33,8 +33,8 @@ router.post('/', asyncHandler(async (req, res) => {
         return res.json({error: "존재하지 않는 회원입니다."});
     }
 
-    // 필수 작성 validation
-    if (!name) {
+    // 필수 작성 validation + 공백 막기
+    if (!name.trim()) {
         res.status(statusCode.BAD_REQUEST);
         return res.json({error: "이름을 입력하세요."});
     }
@@ -78,8 +78,8 @@ router.put('/:collectionId', asyncHandler(async (req, res) => {
         return res.json({error: "수정할 권한이 없습니다."});
     }
 
-    // 필수 작성 validation
-    if (!name) {
+    // 필수 작성 validation + 공백 막기
+    if (!name.trim()) {
         res.status(statusCode.BAD_REQUEST);
         return res.json({error: "이름을 입력하세요."});
     }

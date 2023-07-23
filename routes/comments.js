@@ -12,8 +12,9 @@ const statusCode = require('../utils/status-code');
 router.post('/:postId', asyncHandler(async (req, res) => {
 
     const { content, userId } = req.body;
+    const { postId } = req.params;
 
-    const post = await Post.findById(req.params.postId);
+    const post = await Post.findById(postId);
     // 게시물 찾기 실패
     if (!post) {
         res.status(statusCode.NOT_FOUND);
@@ -32,8 +33,8 @@ router.post('/:postId', asyncHandler(async (req, res) => {
         return res.json({error: "존재하지 않는 회원입니다."});
     }
 
-    // 필수 작성 validation
-    if (!content) {
+    // 필수 작성 validation + 공백 막기
+    if (!content.trim()) {
         res.status(statusCode.BAD_REQUEST);
         return res.json({error: "내용을 입력하세요."});
     }
@@ -41,7 +42,7 @@ router.post('/:postId', asyncHandler(async (req, res) => {
     const comment = await Comment.create({
         content,
         user: userId,
-        post,
+        post: postId,
     });
 
     // Post 댓글 업데이트
