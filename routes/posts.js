@@ -13,7 +13,8 @@ const statusCode = require('../utils/status-code');
 /* 모든 게시물 보기 + 지역별, 검색, 정렬 */
 router.get('/', asyncHandler(async (req, res) => {
     
-    const {siDo, keyword, sort, page} = req.query;
+    const {siDo, keyword, sort} = req.query;
+    const page = Number(req.query.page || 1);
     const {userId} = req.body;
     let posts, result;
 
@@ -21,11 +22,6 @@ router.get('/', asyncHandler(async (req, res) => {
     const perPage = 9;
     let countPosts, maxPage;
 
-    // 페이지 번호 없는 경우
-    if (!page) {
-        res.status(statusCode.BAD_REQUEST);
-        return res.json({error: "페이지 번호를 입력해주세요."});
-    }
     // 페이지 범위 미달
     if (page < 1) {
         res.status(statusCode.BAD_REQUEST);
@@ -376,7 +372,7 @@ router.get('/', asyncHandler(async (req, res) => {
     countPosts = await Post.countDocuments();
     maxPage = Math.ceil(countPosts / perPage);
     // 페이지 범위 초과
-    if (page > maxPage || page < 1) {
+    if (page > maxPage) {
         res.status(statusCode.BAD_REQUEST);
         return res.json({error: "페이지 없음"});
     }
