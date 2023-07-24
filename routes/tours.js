@@ -16,7 +16,7 @@ router.get('/', asyncHandler(async (req, res) => {
 
     // 지역별 관광지 정보
     tourInfo.forEach(function(tour) {
-        if(JSON.stringify(tour).includes(region)) {
+        if(JSON.stringify(tour).includes('"location":"' + region)) {
             result.push(tour);
         }
     });
