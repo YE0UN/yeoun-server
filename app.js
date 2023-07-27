@@ -5,6 +5,8 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 const cors = require('cors');
+const passport = require('passport');
+const passportConfig = require('./config/passport');
 
 const postsRouter = require('./routes/posts');
 const usersRouter = require('./routes/users');
@@ -44,6 +46,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, '../yeoun-client/build')));
+app.use(passport.initialize());
+passportConfig();
 
 app.use('/posts', postsRouter);
 app.use('/users', usersRouter);
