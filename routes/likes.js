@@ -1,5 +1,6 @@
 const { Router } = require('express');
 const router = Router();
+const passport = require('passport');
 
 const Post = require('../models/Post');
 const User = require('../models/User');
@@ -9,19 +10,19 @@ const asyncHandler = require('../utils/async-handler');
 const statusCode = require('../utils/status-code');
 
 /* 좋아요 토글링 */
-router.post('/:postId', asyncHandler(async(req, res) => {
-    const { userId } = req.body;
+router.post('/:postId', passport.authenticate('jwt', {session: false}), asyncHandler(async(req, res) => {
     const { postId }  = req.params;
+    const user = req.user;
     let result = {};
 
     // 로그인 여부 확인
-    if (!userId) {
+    if (!user) {
         res.status(statusCode.UNAUTHORIZED);
         return res.json({error: "로그인이 필요합니다."});
     }
 
     // 회원 존재 확인
-    if (!await User.exists({ _id: userId })) {
+    if (!await User.exists({ _id: user._id })) {
         res.status(statusCode.NOT_FOUND);
         return res.json({error: "존재하지 않는 회원입니다."});
     }
@@ -32,7 +33,7 @@ router.post('/:postId', asyncHandler(async(req, res) => {
         return res.json({error: "해당 게시물이 없습니다."});
     }
 
-    const isLiked = await Like.findOne({user: userId, post: postId});
+    const isLiked = await Like.findOne({user: user._id, post: postId});
     const post = await Post.findById(postId);
 
     // 해당 게시물에 좋아요 일때
@@ -50,7 +51,7 @@ router.post('/:postId', asyncHandler(async(req, res) => {
     else {
         // 좋아요 누르기
         await Like.create({
-            user: userId, 
+            user: user._id, 
             post: postId
         });   
         

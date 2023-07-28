@@ -3,28 +3,31 @@ const passportJWT = require('passport-jwt');
 const JWTStrategy   = passportJWT.Strategy;
 const ExtractJWT = passportJWT.ExtractJwt;
 const LocalStrategy = require('passport-local').Strategy;
-let User = require('../models/User');
+const AnonymousStrategy = require('passport-anonymous').Strategy;
 require('dotenv').config();
+
+const User = require('../models/User');
 
 const hashPassword = require('../utils/hash-password');
 
 module.exports = () => {
     // Local Strategy
     passport.use(new LocalStrategy({
-            usernameField: 'email',
-            passwordField: 'password'
-        },
-        function (email, password, done) {
-            // 저장되어 있는 User 비교
-            return User.findOne({email: email, password: hashPassword(password)})
-                .then(user => {
-                    console.log("user: " + user);
-                    if (!user) {
-                        return done(null, false, {message: 'Incorrect email or password.'});
-                    }
-                    return done(null, user, {message: 'Logged In Successfully'});
-                })
-                .catch(err => done(err));
+        usernameField: 'email', 
+        passwordField: 'password'
+        }, 
+        async (email, password, done) => {
+            try {
+            const user = await User.findOne({email: email, password: hashPassword(password)});
+            if (!user) {
+                done(null, false, { error: '아이디 또는 비밀번호가 일치하지 않습니다.' });
+                return;
+            }
+            done (null, user, { message: '로그인 성공' });
+            } catch (err) {
+            console.error(err);
+            done(err);
+            }
         }
     ));
     
@@ -33,14 +36,19 @@ module.exports = () => {
             jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken(),
             secretOrKey   : process.env.JWT_SECRET
         },
-        function (jwtPayload, done) {
-            return User.findById(jwtPayload._id)
-                .then(user => {
+        async (jwtPayload, done) => {
+            try {
+                const user = await User.findById(jwtPayload.id);
+                if (user) {
                     return done(null, user);
-                })
-                .catch(err => {
-                    return done(err);
-                });
+                }
+            }
+            catch (err) {
+                console.log(err);
+                done(err);
+            }
         }
     ));
+
+    passport.use(new AnonymousStrategy());
 }

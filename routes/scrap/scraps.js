@@ -1,5 +1,6 @@
 const { Router } = require('express');
 const router = Router();
+const passport = require('passport');
 
 const User = require('../../models/User');
 const Collection = require('../../models/Collection');
@@ -8,26 +9,27 @@ const asyncHandler = require('../../utils/async-handler');
 const statusCode = require('../../utils/status-code');
 
 /* 스크랩하기 */
-router.post('/:postId', asyncHandler(async (req, res) => {
+router.post('/:postId', passport.authenticate('jwt', {session: false}), asyncHandler(async (req, res) => {
 
-    const { collectionId, userId } = req.body;
+    const { collectionId } = req.body;
     const { postId } = req.params;
+    const user = req.user;
 
     // 로그인 여부 확인
-    if (!userId) {
+    if (!user) {
         res.status(statusCode.UNAUTHORIZED);
         return res.json({error: "로그인이 필요합니다."});
     }
 
     // 회원 존재 확인
-    if (!await User.exists({ _id: userId })) {
+    if (!await User.exists({ _id: user._id })) {
         res.status(statusCode.NOT_FOUND);
         return res.json({error: "존재하지 않는 회원입니다."});
     }
 
     const collection = await Collection.findById(collectionId);
     // 컬렉션 작성자와 로그인 유저 일치하는지
-    if (!collection.user.equals(userId)) {
+    if (!collection.user.equals(user._id)) {
         res.status(statusCode.FORBIDDEN);
         return res.json({error: "해당 컬렉션에 접근할 수 없음"});
     }
@@ -48,26 +50,27 @@ router.post('/:postId', asyncHandler(async (req, res) => {
 }));
 
 /* 스크랩 컬렉션 변경하기 */
-router.put('/:postId', asyncHandler(async (req, res) => {
+router.put('/:postId', passport.authenticate('jwt', {session: false}), asyncHandler(async (req, res) => {
 
-    const { collectionId, userId } = req.body;
+    const { collectionId } = req.body;
     const { postId } = req.params;
+    const user = req.user;
 
     // 로그인 여부 확인
-    if (!userId) {
+    if (!user) {
         res.status(statusCode.UNAUTHORIZED);
         return res.json({error: "로그인이 필요합니다."});
     }
 
     // 회원 존재 확인
-    if (!await User.exists({ _id: userId })) {
+    if (!await User.exists({ _id: user._id })) {
         res.status(statusCode.NOT_FOUND);
         return res.json({error: "존재하지 않는 회원입니다."});
     }
 
     // 기존 Collection의 posts에서 제거
     const preCollection = await Collection.findOne({ 
-        user: userId,
+        user: user._id,
         posts: postId
      });
     // 컬렉션 찾기 실패
@@ -81,7 +84,7 @@ router.put('/:postId', asyncHandler(async (req, res) => {
     // 입력 받은 Collection의 posts에 추가
     const updatedCollection = await Collection.findById(collectionId);
     // 컬렉션 작성자와 로그인 유저 일치하는지
-    if (!updatedCollection.user.equals(userId)) {
+    if (!updatedCollection.user.equals(user._id)) {
         res.status(statusCode.FORBIDDEN);
         return res.json({error: "해당 컬렉션에 접근할 수 없음"});
     }
@@ -93,26 +96,27 @@ router.put('/:postId', asyncHandler(async (req, res) => {
 }));
 
 /* 스크랩 해제하기 */
-router.delete('/:postId', asyncHandler(async (req, res) => {
+router.delete('/:postId', passport.authenticate('jwt', {session: false}), asyncHandler(async (req, res) => {
 
-    const { collectionId, userId } = req.body;
+    const { collectionId } = req.body;
     const { postId } = req.params;
+    const user = req.user;
 
     // 로그인 여부 확인
-    if (!userId) {
+    if (!user) {
         res.status(statusCode.UNAUTHORIZED);
         return res.json({error: "로그인이 필요합니다."});
     }
 
     // 회원 존재 확인
-    if (!await User.exists({ _id: userId })) {
+    if (!await User.exists({ _id: user._id })) {
         res.status(statusCode.NOT_FOUND);
         return res.json({error: "존재하지 않는 회원입니다."});
     }
 
     const collection = await Collection.findById(collectionId);
     // 컬렉션 작성자와 로그인 유저 일치하는지
-    if (!collection.user.equals(userId)) {
+    if (!collection.user.equals(user._id)) {
         res.status(statusCode.FORBIDDEN);
         return res.json({error: "해당 컬렉션에 접근할 수 없음"});
     }

@@ -1,5 +1,6 @@
 const { Router } = require('express');
 const router = Router();
+const passport = require('passport');
 
 const Post = require('../models/Post');
 const User = require('../models/User');
@@ -11,13 +12,13 @@ const asyncHandler = require('../utils/async-handler');
 const statusCode = require('../utils/status-code');
 
 /* 모든 게시물 보기 + 지역별, 검색, 정렬 */
-router.get('/', asyncHandler(async (req, res) => {
+router.get('/', passport.authenticate(['jwt', 'anonymous'], { session: false }), asyncHandler(async (req, res) => {
     
-    const {siDo, keyword, sort} = req.query;
-    const page = Number(req.query.page || 1);
-    const {userId} = req.body;
+    const userId = req.user ? req.user._id : null;
     let posts, result;
-
+    const {siDo, keyword, sort} = req.query;
+    
+    const page = Number(req.query.page || 1);
     const currentPage = page;
     const perPage = 9;
     let countPosts, maxPage;
@@ -398,9 +399,9 @@ router.get('/', asyncHandler(async (req, res) => {
 }));
 
 /* 특정 게시물 보기 */
-router.get('/:postId', asyncHandler(async (req, res) => {
+router.get('/:postId', passport.authenticate('jwt', {session: false}), asyncHandler(async (req, res) => {
     const { postId } = req.params;
-    const { userId } = req.body;
+    const user = req.user;
     let likeState = false;
     let scrap = false;
 
@@ -421,12 +422,12 @@ router.get('/:postId', asyncHandler(async (req, res) => {
     }
 
     // 유저의 좋아요 여부
-    if (await Like.exists({user: userId, post: postId})) {
+    if (await Like.exists({user: user._id, post: postId})) {
         likeState = true;
     }
 
     // 유저의 스크랩 여부
-    if (await Collection.exists({user: userId, posts: postId})) {
+    if (await Collection.exists({user: user._id, posts: post})) {
         scrap = true;
     }
 
@@ -434,22 +435,23 @@ router.get('/:postId', asyncHandler(async (req, res) => {
 })); 
 
 /* 게시물 작성하기 */
-router.post('/', asyncHandler(async (req, res) => {
+router.post('/', passport.authenticate('jwt', {session: false}), asyncHandler(async (req, res) => {
 
-    const { siDo, title, content, img, userId } = req.body;
+    const { siDo, title, content, img } = req.body;
+    const user = req.user;
 
     // 로그인 여부 확인
-    if (!userId) {
+    if (!user) {
         res.status(statusCode.UNAUTHORIZED);
         return res.json({error: "로그인이 필요합니다."});
     }
 
     // 회원 존재 확인
-    if (!await User.exists({ _id: userId })) {
+    if (!await User.exists({ _id: user._id })) {
         res.status(statusCode.NOT_FOUND);
         return res.json({error: "존재하지 않는 회원입니다."});
     }
-
+    
     // 필수 작성 validation + 공백 막기
     if (!siDo) {
         res.status(statusCode.BAD_REQUEST);
@@ -465,7 +467,7 @@ router.post('/', asyncHandler(async (req, res) => {
         title,
         content,
         img,
-        user: userId,
+        user: user._id,
     });
 
     console.log('게시물 작성 완료');
@@ -473,8 +475,11 @@ router.post('/', asyncHandler(async (req, res) => {
 })); 
 
 /* 게시물 수정하기 */
-router.put('/:postId', asyncHandler(async (req, res) => {
+router.put('/:postId', passport.authenticate('jwt', {session: false}),  asyncHandler(async (req, res) => {
     
+    const { siDo, title, content, img } = req.body;
+    const user = req.user;
+
     const post = await Post.findById(req.params.postId);
     // 게시물 찾기 실패
     if (!post) {
@@ -482,22 +487,20 @@ router.put('/:postId', asyncHandler(async (req, res) => {
         return res.json({error: "해당 게시물 없음"});
     }
 
-    const { siDo, title, content, img, userId } = req.body;
-
     // 로그인 여부 확인
-    if (!userId) {
+    if (!user) {
         res.status(statusCode.UNAUTHORIZED);
         return res.json({error: "로그인이 필요합니다."});
     }
 
     // 회원 존재 확인
-    if (!await User.exists({ _id: userId })) {
+    if (!await User.exists({ _id: user._id })) {
         res.status(statusCode.NOT_FOUND);
         return res.json({error: "존재하지 않는 회원입니다."});
     }
 
     // 게시물 작성자와 로그인 유저 일치하는지
-    if (!post.user.equals(userId)) {
+    if (!post.user.equals(user._id)) {
         res.status(statusCode.FORBIDDEN);
         return res.json({error: "수정할 권한이 없습니다."});
     }
@@ -523,37 +526,45 @@ router.put('/:postId', asyncHandler(async (req, res) => {
 }));
 
 /* 게시물 삭제하기 */ 
-router.delete('/:postId', asyncHandler(async (req, res) => {
+router.delete('/:postId', passport.authenticate('jwt', {session: false}), asyncHandler(async (req, res) => {
 
-    const post = await Post.findById(req.params.postId);
+    const { postId } = req.params;
+    const post = await Post.findById(postId);
     // 게시물 찾기 실패
     if (!post) {
         res.status(statusCode.NOT_FOUND);
         return res.json({error: "해당 게시물 없음"});
     }
-    const { userId } = req.body;
-     // 로그인 여부 확인
-     if (!userId) {
+
+    const user = req.user;
+    // 로그인 여부 확인
+     if (!user) {
         res.status(statusCode.UNAUTHORIZED);
         return res.json({error: "로그인이 필요합니다."});
     }
 
     // 회원 존재 확인
-    if (!await User.exists({ _id: userId })) {
+    if (!await User.exists({ _id: user._id })) {
         res.status(statusCode.NOT_FOUND);
         return res.json({error: "존재하지 않는 회원입니다."});
     }
 
     // 게시물 작성자와 로그인 유저 일치하는지
-    if (!post.user.equals(userId)) {
+    if (!post.user.equals(user._id)) {
         res.status(statusCode.FORBIDDEN);
         return res.json({error: "삭제할 권한이 없습니다."});
     }
 
-    // Comment에서도 삭제
+    // 관련 댓글, 좋아요, 스크랩 삭제
     await Comment.deleteMany({ post: post });
-    await Post.deleteOne(post);
+    await Like.deleteMany({ post: post });
+    const collections = await Collection.find({ posts: post });
+    collections.map(async (collection) => {
+        collection.posts.splice(collection.posts.indexOf(postId), 1);
+        await collection.save();
+    });
     
+    await Post.deleteOne(post);
     console.log('게시물 삭제 완료');
     res.json({message: "게시물 삭제가 완료되었습니다."});
 })); 

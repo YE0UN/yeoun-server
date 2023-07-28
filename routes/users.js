@@ -12,6 +12,7 @@ const Collection = require('../models/Collection');
 
 const asyncHandler = require('../utils/async-handler');
 const hashPassword = require('../utils/hash-password');
+const statusCode = require('../utils/status-code');
 
 // 회원가입
 router.post('/signup', asyncHandler(async (req, res) => {
@@ -66,17 +67,16 @@ router.post('/signin/token', asyncHandler(async (req, res) => {
           if (err) {
               res.send(err);
           }
-          // jwt.sign('token 내용', 'JWT secretkey')
-          const token = jwt.sign(user.toJSON(), process.env.JWT_SECRET);
+          // 유저 jwt 생성 - jwt.sign('token 내용', 'JWT secretkey')
+          const token = jwt.sign({id: user._id}, process.env.JWT_SECRET, {expiresIn: '1 year'});
           return res.json({user, token});
       });
   })(req, res);
 }));
 
-
 // 회원 탈퇴
-router.delete('/:userId/delete', asyncHandler(async (req, res) => {
-  const user = await User.findById(req.params.userId);
+router.delete('/delete', passport.authenticate('jwt', {session: false}), asyncHandler(async (req, res) => {
+  const user = req.user;
   await User.deleteOne(user);
   // 관련 게시물, 댓글, 좋아요, 스크랩 다 삭제 필요함
   res.json({message: '탈퇴 성공'});
@@ -100,8 +100,8 @@ router.get('/validate/nickname/:nickname', asyncHandler(async(req, res) => {
 }))
 
 // 프로필 조회
-router.get('/:userId/profile', asyncHandler(async (req, res) => {
-  const user = await User.findById(req.params.userId);
+router.get('/profile', passport.authenticate('jwt', {session: false}), asyncHandler(async (req, res) => {
+  const user = req.user;
   res.json({user: {
     email: user.email,
     nickname: user.nickname,
@@ -111,24 +111,26 @@ router.get('/:userId/profile', asyncHandler(async (req, res) => {
 }))
 
 // 프로필 변경
-router.put('/:userId/profile', asyncHandler(async(req, res) => {
+router.put('/profile', passport.authenticate('jwt', {session: false}), asyncHandler(async(req, res) => {
+  const user = req.user;
   await User.findByIdAndUpdate(
-    {_id: req.params.userId},
+    {_id: user._id},
     {
       profileImage: req.body.profileImage,
       email: req.body.email,
       nickname: req.body.nickname,
       introduction: req.body.introduction
     }
-    );
+  );
 
   res.json({message: '프로필 변경이 완료되었습니다.'});
 }))
 
 // 비밀번호 변경
-router.put('/:userId/profile/pw', asyncHandler(async(req, res) => {
+router.put('/profile/password', passport.authenticate('jwt', {session: false}), asyncHandler(async(req, res) => {
+  const user = req.user;
   await User.findByIdAndUpdate(
-    {_id: req.params.userId},
+    {_id: user._id},
     {password: hashPassword(req.body.password)}
   );
 
@@ -137,26 +139,26 @@ router.put('/:userId/profile/pw', asyncHandler(async(req, res) => {
 
 
 // 마이페이지 (내가 쓴 글)
-router.get('/:userId/posts', asyncHandler(async(req, res) => {
-  const { userId } = req.params;
+router.get('/posts', passport.authenticate('jwt', {session: false}), asyncHandler(async(req, res) => {
+  const user = req.user;
 
-  if (!await User.exists({ _id: userId })) {
+  if (!await User.exists({ _id: user._id })) {
     return res.status(404).json({error: "존재하지 않는 회원입니다."});
   }
 
-  const posts = await Post.find({user: userId}).populate('user', 'nickname profileImage introduction').sort({createdAt: -1});
+  const posts = await Post.find({user: user._id}).populate('user', 'nickname profileImage introduction').sort({createdAt: -1});
   res.json(await Promise.all(
     posts.map(async(post) => {   
         let likeState = false;
         let scrap = false;
 
         // 유저의 좋아요 여부
-        if (await Like.exists({user: userId, post: post})) {
+        if (await Like.exists({user: user._id, post: post})) {
             likeState = true;
         }
 
         // 유저의 스크랩 여부
-        if (await Collection.exists({user: userId, posts: post})) {
+        if (await Collection.exists({user: user._id, posts: post})) {
             scrap = true;
         }
 
@@ -166,26 +168,26 @@ router.get('/:userId/posts', asyncHandler(async(req, res) => {
 }))
 
 // 내가 쓴 댓글
-router.get('/:userId/comments', asyncHandler(async(req, res) => {
-  const { userId } = req.params;
+router.get('/comments', passport.authenticate('jwt', {session: false}), asyncHandler(async(req, res) => {
+  const user = req.user;
 
-  if (!await User.exists({ _id: userId })) {
+  if (!await User.exists({ _id: user._id })) {
     return res.status(404).json({error: "존재하지 않는 회원입니다."});
   }
 
-  const comments = await Comment.find({user: userId}).populate('post', 'title').sort({createdAt: -1});
+  const comments = await Comment.find({user: user._id}).populate('post', 'title').sort({createdAt: -1});
   res.json(comments);
 }))
 
 // 내가 스크랩한 글
-router.get('/:userId/scraps', asyncHandler(async (req, res) => {
-  const { userId } = req.params;
+router.get('/scraps', passport.authenticate('jwt', {session: false}), asyncHandler(async (req, res) => {
+  const user = req.user;
 
-  if (!await User.exists({ _id: userId })) {
+  if (!await User.exists({ _id: user._id })) {
     return res.status(404).json({error: "존재하지 않는 회원입니다."});
   }
 
-  const collections = await Collection.find({user: userId}).sort({createdAt: -1})
+  const collections = await Collection.find({user: user._id}).sort({createdAt: -1})
                                         .populate({path: 'posts', options: { sort: { 'createdAt': -1 } }, 
                                                   populate: {path: 'user', select: 'nickname profileImage introduction'}});
   res.json(await Promise.all(
@@ -197,12 +199,12 @@ router.get('/:userId/scraps', asyncHandler(async (req, res) => {
           let scrap = false;
   
           // 유저의 좋아요 여부
-          if (await Like.exists({user: userId, post: post})) {
+          if (await Like.exists({user: user._id, post: post})) {
               likeState = true;
           }
   
           // 유저의 스크랩 여부
-          if (await Collection.exists({user: userId, posts: post})) {
+          if (await Collection.exists({user: user._id, posts: post})) {
               scrap = true;
           }
   
