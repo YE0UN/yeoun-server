@@ -48,7 +48,7 @@ router.post('/signin', asyncHandler(async (req, res) => {
   
 }));
 
-// 로그인 (토큰 이용)
+// 로그인 (토큰 + 쿠키)
 router.post('/signin/token', asyncHandler(async (req, res) => {
   passport.authenticate('local', {session: false}, (err, user) => {
       if (err) {
@@ -69,9 +69,19 @@ router.post('/signin/token', asyncHandler(async (req, res) => {
           }
           // 유저 jwt 생성 - jwt.sign('token 내용', 'JWT secretkey')
           const token = jwt.sign({id: user._id}, process.env.JWT_SECRET, {expiresIn: '1 year'});
+          // 토큰 쿠키로 전달
+          res.cookie('token', token);
           return res.json({user, token});
       });
   })(req, res);
+}));
+
+// 로그아웃 (쿠키 삭제)
+router.post('/logout', passport.authenticate('jwt', {session: false}), asyncHandler(async (req, res) => {
+  res.cookie('token', null, {
+    maxAge: 0,
+  });
+  res.json({message: '로그아웃 성공'});
 }));
 
 // 회원 탈퇴

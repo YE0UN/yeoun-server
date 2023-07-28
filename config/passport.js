@@ -10,6 +10,11 @@ const User = require('../models/User');
 
 const hashPassword = require('../utils/hash-password');
 
+const cookieExtractor = (req) => {
+    const { token } = req.cookies;
+    return token;
+}
+
 module.exports = () => {
     // Local Strategy
     passport.use(new LocalStrategy({
@@ -33,7 +38,7 @@ module.exports = () => {
     
     // JWT Strategy
     passport.use(new JWTStrategy({
-            jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken(),
+            jwtFromRequest: cookieExtractor,
             secretOrKey   : process.env.JWT_SECRET
         },
         async (jwtPayload, done) => {
