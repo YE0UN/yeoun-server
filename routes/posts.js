@@ -16,7 +16,7 @@ router.get('/', passport.authenticate(['jwt', 'anonymous'], { session: false }),
     
     const userId = req.user ? req.user._id : null;
     let posts, result;
-    const {siDo, keyword, sort} = req.query;
+    const {region, keyword, sort} = req.query;
     
     const page = Number(req.query.page || 1);
     const currentPage = page;
@@ -30,11 +30,11 @@ router.get('/', passport.authenticate(['jwt', 'anonymous'], { session: false }),
     }
     
     // 지역별 & 검색별
-    if (siDo && keyword) {
+    if (region && keyword) {
         // + 정렬
         if (sort) {
             countPosts = await Post.countDocuments({
-                siDo: siDo,
+                region: region,
                 $or: [
                     {title: {$regex: new RegExp(`${keyword}`, "i"), }},
                     {content: {$regex: new RegExp(`${keyword}`, "i"), }}
@@ -50,7 +50,7 @@ router.get('/', passport.authenticate(['jwt', 'anonymous'], { session: false }),
             switch (sort) {
                 case "createdAt": 
                     posts = await Post.find({
-                        siDo: siDo,
+                        region: region,
                         $or: [
                             // i: 대소문자 구별X
                             {title: {$regex: new RegExp(`${keyword}`, "i"), }},
@@ -61,7 +61,7 @@ router.get('/', passport.authenticate(['jwt', 'anonymous'], { session: false }),
                     
                 case "comment":
                     posts = await Post.find({
-                        siDo: siDo,
+                        region: region,
                         $or: [
                             {title: {$regex: new RegExp(`${keyword}`, "i"), }},
                             {content: {$regex: new RegExp(`${keyword}`, "i"), }}
@@ -71,7 +71,7 @@ router.get('/', passport.authenticate(['jwt', 'anonymous'], { session: false }),
     
                 case "like":
                     posts = await Post.find({
-                        siDo: siDo,
+                        region: region,
                         $or: [
                             {title: {$regex: new RegExp(`${keyword}`, "i"), }},
                             {content: {$regex: new RegExp(`${keyword}`, "i"), }}
@@ -102,7 +102,7 @@ router.get('/', passport.authenticate(['jwt', 'anonymous'], { session: false }),
             return res.json(result);
         }
         countPosts = await Post.countDocuments({
-            siDo: siDo,
+            region: region,
             $or: [
                 {title: {$regex: new RegExp(`${keyword}`, "i"), }},
                 {content: {$regex: new RegExp(`${keyword}`, "i"), }}
@@ -116,7 +116,7 @@ router.get('/', passport.authenticate(['jwt', 'anonymous'], { session: false }),
         } 
 
         posts = await Post.find({
-            siDo: siDo,
+            region: region,
             $or: [
                 {title: {$regex: new RegExp(`${keyword}`, "i"), }},
                 {content: {$regex: new RegExp(`${keyword}`, "i"), }}
@@ -142,11 +142,11 @@ router.get('/', passport.authenticate(['jwt', 'anonymous'], { session: false }),
         return res.json(result);
     }
     // 지역별
-    if (siDo) {
+    if (region) {
         // + 정렬
         if (sort) {
             countPosts = await Post.countDocuments({
-                siDo: siDo,
+                region: region,
             });
             maxPage = Math.ceil(countPosts / perPage);
             // 페이지 범위 초과
@@ -158,19 +158,19 @@ router.get('/', passport.authenticate(['jwt', 'anonymous'], { session: false }),
             switch (sort) {
                 case "createdAt": 
                     posts = await Post.find({
-                        siDo: siDo,
+                        region: region,
                     }).populate('user', 'nickname profileImage introduction').sort({createdAt: -1}).skip((page - 1) * perPage).limit(perPage);
                     break;
                     
                 case "comment":
                     posts = await Post.find({
-                        siDo: siDo,
+                        region: region,
                     }).populate('user', 'nickname profileImage introduction').sort({commentCount: -1, createdAt: -1}).skip((page - 1) * perPage).limit(perPage);
                     break;
     
                 case "like":
                     posts = await Post.find({
-                        siDo: siDo,
+                        region: region,
                     }).populate('user', 'nickname profileImage introduction').sort({likeCount: -1, createdAt: -1}).skip((page - 1) * perPage).limit(perPage);
                     break;
             }
@@ -194,7 +194,7 @@ router.get('/', passport.authenticate(['jwt', 'anonymous'], { session: false }),
             return res.json(result);
         }
         countPosts = await Post.countDocuments({
-            siDo: siDo,
+            region: region,
         });
         maxPage = Math.ceil(countPosts / perPage);
         // 페이지 범위 초과
@@ -204,7 +204,7 @@ router.get('/', passport.authenticate(['jwt', 'anonymous'], { session: false }),
         }
 
         posts = await Post.find({
-            siDo: siDo,
+            region: region,
         }).populate('user', 'nickname profileImage introduction').skip((page - 1) * perPage).limit(perPage);
         result = await Promise.all(
             posts.map(async(post) => {
@@ -437,7 +437,7 @@ router.get('/:postId', passport.authenticate('jwt', {session: false}), asyncHand
 /* 게시물 작성하기 */
 router.post('/', passport.authenticate('jwt', {session: false}), asyncHandler(async (req, res) => {
 
-    const { siDo, title, content, img } = req.body;
+    const { region, title, content, img } = req.body;
     const user = req.user;
 
     // 로그인 여부 확인
@@ -453,7 +453,7 @@ router.post('/', passport.authenticate('jwt', {session: false}), asyncHandler(as
     }
     
     // 필수 작성 validation + 공백 막기
-    if (!siDo) {
+    if (!region) {
         res.status(statusCode.BAD_REQUEST);
         return res.json({error: "지역을 선택하세요."});
     }
@@ -463,7 +463,7 @@ router.post('/', passport.authenticate('jwt', {session: false}), asyncHandler(as
     }
 
     const post = await Post.create({
-        siDo,
+        region,
         title,
         content,
         img,
@@ -477,7 +477,7 @@ router.post('/', passport.authenticate('jwt', {session: false}), asyncHandler(as
 /* 게시물 수정하기 */
 router.put('/:postId', passport.authenticate('jwt', {session: false}),  asyncHandler(async (req, res) => {
     
-    const { siDo, title, content, img } = req.body;
+    const { region, title, content, img } = req.body;
     const user = req.user;
 
     const post = await Post.findById(req.params.postId);
@@ -506,7 +506,7 @@ router.put('/:postId', passport.authenticate('jwt', {session: false}),  asyncHan
     }
 
     // 필수 작성 validation + 공백 막기
-    if (!siDo) {
+    if (!region) {
         res.status(statusCode.BAD_REQUEST);
         return res.json({error: "지역을 선택하세요."});
     }
@@ -515,7 +515,7 @@ router.put('/:postId', passport.authenticate('jwt', {session: false}),  asyncHan
         return res.json({error: "내용을 입력하세요."});
     }
 
-    post.siDo = siDo;
+    post.region = region;
     post.title = title;
     post.img = img;
     post.content = content;

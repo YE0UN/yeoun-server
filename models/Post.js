@@ -3,7 +3,7 @@ const Schema = mongoose.Schema;
 
 const PostSchema = new Schema({
 
-	siDo: {
+	region: {
         type: String,
         required: true,
     },
