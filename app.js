@@ -7,6 +7,7 @@ var logger = require('morgan');
 const cors = require('cors');
 const passport = require('passport');
 const passportConfig = require('./config/passport');
+require('dotenv').config();
 
 const postsRouter = require('./routes/posts');
 const usersRouter = require('./routes/users');
@@ -19,7 +20,7 @@ const tourRouter = require('./routes/tours');
 const app = express();
 
 // mongoose setup
-mongoose.connect('mongodb+srv://yeoun:kgw469Q3t7riuXPe@yeoun.fbf0laa.mongodb.net/?retryWrites=true&w=majority');
+mongoose.connect(process.env.MONGODB_URL);
 
 mongoose.connection.on("connected", () => {
   console.log("Successfully connected to MongoDB");
