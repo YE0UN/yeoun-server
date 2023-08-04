@@ -34,11 +34,11 @@ router.post('/signin', asyncHandler(async (req, res) => {
   const user = await User.findOne({email});
   
   if (!user) {
-    return res.status(404).json({error: "존재하지 않는 회원입니다."});
+    return res.status(statusCode.NOT_FOUND).json({error: "존재하지 않는 회원입니다."});
   }
   
   if (user.password !== hashPassword(password)) {
-    return res.status(404).json({error: "비밀번호가 일치하지 않습니다."});
+    return res.status(statusCode.NOT_FOUND).json({error: "비밀번호가 일치하지 않습니다."});
   }
   
   res.json({
@@ -96,7 +96,7 @@ router.delete('/delete', passport.authenticate('jwt', {session: false}), asyncHa
 router.get('/validate/email/:email', asyncHandler(async(req, res) => {
   const email = req.params.email;
   if(await User.exists({email})) {
-    return res.status(409).json({error: "이미 사용 중인 이메일입니다."});
+    return res.status(statusCode.CONFLICT).json({error: "이미 사용 중인 이메일입니다."});
   }
   res.json({message: "사용 가능한 이메일입니다."});
 }))
@@ -104,7 +104,7 @@ router.get('/validate/email/:email', asyncHandler(async(req, res) => {
 router.get('/validate/nickname/:nickname', asyncHandler(async(req, res) => {
   const nickname = req.params.nickname;
   if(await User.exists({nickname})) {
-    return res.status(409).json({error: "이미 사용 중인 닉네임입니다."});
+    return res.status(statusCode.CONFLICT).json({error: "이미 사용 중인 닉네임입니다."});
   }
   res.json({message: "사용 가능한 닉네임입니다."});
 }))
@@ -153,7 +153,7 @@ router.get('/posts', passport.authenticate('jwt', {session: false}), asyncHandle
   const user = req.user;
 
   if (!await User.exists({ _id: user._id })) {
-    return res.status(404).json({error: "존재하지 않는 회원입니다."});
+    return res.status(statusCode.NOT_FOUND).json({error: "존재하지 않는 회원입니다."});
   }
 
   const posts = await Post.find({user: user._id}).populate('user', 'nickname profileImage introduction').sort({createdAt: -1});
@@ -182,7 +182,7 @@ router.get('/comments', passport.authenticate('jwt', {session: false}), asyncHan
   const user = req.user;
 
   if (!await User.exists({ _id: user._id })) {
-    return res.status(404).json({error: "존재하지 않는 회원입니다."});
+    return res.status(statusCode.NOT_FOUND).json({error: "존재하지 않는 회원입니다."});
   }
 
   const comments = await Comment.find({user: user._id}).populate('post', 'title').sort({createdAt: -1});
@@ -194,7 +194,7 @@ router.get('/scraps', passport.authenticate('jwt', {session: false}), asyncHandl
   const user = req.user;
 
   if (!await User.exists({ _id: user._id })) {
-    return res.status(404).json({error: "존재하지 않는 회원입니다."});
+    return res.status(statusCode.NOT_FOUND).json({error: "존재하지 않는 회원입니다."});
   }
 
   const collections = await Collection.find({user: user._id}).sort({createdAt: -1})
