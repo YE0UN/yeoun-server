@@ -87,8 +87,30 @@ router.post('/logout', passport.authenticate('jwt', {session: false}), asyncHand
 // 회원 탈퇴
 router.delete('/delete', passport.authenticate('jwt', {session: false}), asyncHandler(async (req, res) => {
   const user = req.user;
+  // 내가 만든 컬렉션만 삭제
+  await Collection.deleteMany({ user: user._id });
+  // 게시물, 댓글, 좋아요의 user를 null로
+  const posts = await Post.find({ user: user._id });
+  posts.map(async (post) => {
+      post.user = null;
+      await post.save();
+  });
+  const comments = await Comment.find({ user: user._id });
+  comments.map(async (comment) => {
+      comment.user = null;
+      await comment.save();
+  });
+  const likes = await Like.find({ user: user._id });
+  likes.map(async (like) => {
+      like.user = null;
+      await like.save();
+  });
   await User.deleteOne(user);
-  // 관련 게시물, 댓글, 좋아요, 스크랩 다 삭제 필요함
+
+  // 쿠키 삭제
+  res.cookie('token', null, {
+    maxAge: 0,
+  });
   res.json({message: '탈퇴 성공'});
 }))
 
