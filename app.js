@@ -16,6 +16,7 @@ const likesRouter = require('./routes/likes');
 const collectionsRouter = require('./routes/scrap/collections');
 const scrapsRouter = require('./routes/scrap/scraps');
 const tourRouter = require('./routes/tours');
+const mapRouter = require('./routes/map');
 
 const app = express();
 
@@ -57,6 +58,7 @@ app.use('/likes', likesRouter);
 app.use('/collections', collectionsRouter);
 app.use('/scraps', scrapsRouter);
 app.use('/tours', tourRouter);
+app.use('/map', mapRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
