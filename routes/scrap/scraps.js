@@ -11,7 +11,7 @@ const statusCode = require('../../utils/status-code');
 /* 스크랩하기 */
 router.post('/:postId', passport.authenticate('jwt', {session: false}), asyncHandler(async (req, res) => {
 
-    const { collectionId } = req.body;
+    const { collectionIds } = req.body;
     const { postId } = req.params;
     const user = req.user;
 
@@ -27,26 +27,36 @@ router.post('/:postId', passport.authenticate('jwt', {session: false}), asyncHan
         return res.json({error: "존재하지 않는 회원입니다."});
     }
 
-    const collection = await Collection.findById(collectionId);
-    // 컬렉션 작성자와 로그인 유저 일치하는지
-    if (!collection.user.equals(user._id)) {
-        res.status(statusCode.FORBIDDEN);
-        return res.json({error: "해당 컬렉션에 접근할 수 없음"});
+    // 컬렉션 관련 validation
+    for (let i = 0; i < collectionIds.length; i++) {
+        const collection = await Collection.findById(collectionIds[i]);
+        // 컬렉션 찾기 실패
+        if (!collection) {
+            res.status(statusCode.NOT_FOUND);
+            return res.json({error: "해당 컬렉션 없음"});
+        }
+        // 컬렉션 작성자와 로그인 유저 일치하는지
+        if (!collection.user.equals(user._id)) {
+            res.status(statusCode.FORBIDDEN);
+            return res.json({error: "해당 컬렉션에 접근할 수 없음"});
+        }
+        // 이미 스크랩되어있는지 -> DELETE 요청 필요
+        if (collection.posts.includes(postId)) {
+            res.status(statusCode.BAD_REQUEST);
+            return res.json({error: "이미 스크랩되어 있습니다."});
+        }
     }
 
-    // 이미 스크랩되어있는지 -> DELETE 요청 필요
-    if (collection.posts.includes(postId)) {
-        res.status(statusCode.BAD_REQUEST);
-        return res.json({error: "이미 스크랩되어 있습니다."});
-    }
+    // 여러 컬렉션에 스크랩
+    collectionIds.map(async(collectionId) => {
+        const collection = await Collection.findById(collectionId);
+        // posts 배열에 추가
+        collection.posts.push(postId);
+        await collection.save();
 
-    // posts 배열에 추가
-    collection.posts.push(postId);
-    await collection.save();
-
-    console.log("스크랩 생성 완료");
+        console.log("스크랩 생성 완료");
+    })
     res.json({ message: "해당 게시물을 스크랩하였습니다."});
-
 }));
 
 /* 스크랩 컬렉션 변경하기 */
@@ -98,7 +108,7 @@ router.put('/:postId', passport.authenticate('jwt', {session: false}), asyncHand
 /* 스크랩 해제하기 */
 router.delete('/:postId', passport.authenticate('jwt', {session: false}), asyncHandler(async (req, res) => {
 
-    const { collectionId } = req.body;
+    const { collectionIds } = req.body;
     const { postId } = req.params;
     const user = req.user;
 
@@ -114,26 +124,37 @@ router.delete('/:postId', passport.authenticate('jwt', {session: false}), asyncH
         return res.json({error: "존재하지 않는 회원입니다."});
     }
 
-    const collection = await Collection.findById(collectionId);
-    // 컬렉션 작성자와 로그인 유저 일치하는지
-    if (!collection.user.equals(user._id)) {
-        res.status(statusCode.FORBIDDEN);
-        return res.json({error: "해당 컬렉션에 접근할 수 없음"});
+    // 컬렉션 관련 validation
+    for (let i = 0; i < collectionIds.length; i++) {
+        const collection = await Collection.findById(collectionIds[i]);
+        // 컬렉션 찾기 실패
+        if (!collection) {
+            res.status(statusCode.NOT_FOUND);
+            return res.json({error: "해당 컬렉션 없음"});
+        }
+        // 컬렉션 작성자와 로그인 유저 일치하는지
+        if (!collection.user.equals(user._id)) {
+            res.status(statusCode.FORBIDDEN);
+            return res.json({error: "해당 컬렉션에 접근할 수 없음"});
+        }
+        // 스크랩 없는 경우
+        if (!collection.posts.includes(postId)) {
+            res.status(statusCode.BAD_REQUEST);
+            return res.json({error: "스크랩이 존재하지 않습니다."});
+        }
     }
 
-    // 스크랩 없는 경우
-    if (!collection.posts.includes(postId)) {
-        res.status(statusCode.BAD_REQUEST);
-        return res.json({error: "스크랩이 존재하지 않습니다."});
-    }
+    // 여러 컬렉션에 스크랩 해제
+    collectionIds.map(async(collectionId) => {
+        const collection = await Collection.findById(collectionId);
+        // 기존 Collection의 posts에서 제거
+        collection.posts.splice(collection.posts.indexOf(postId), 1);
+        await collection.save();
 
-    // 기존 Collection의 posts에서 제거
-    collection.posts.splice(collection.posts.indexOf(postId), 1);
-    await collection.save();
+        console.log("스크랩 해제 완료");
+    });
 
-    console.log("스크랩 해제 완료");
     res.json({ message: "스크랩을 해제하였습니다."});
-
 }));
 
 module.exports = router;

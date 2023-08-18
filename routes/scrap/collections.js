@@ -9,9 +9,23 @@ const asyncHandler = require('../../utils/async-handler');
 const statusCode = require('../../utils/status-code');
 
 /* 컬렉션 보기 */
-router.get('/', passport.authenticate('jwt', {session: false}), asyncHandler(async (req, res) => {
+router.get('/:postId', passport.authenticate('jwt', {session: false}), asyncHandler(async (req, res) => {
+    const { postId } = req.params;
     const user = req.user;
-    const result = await Collection.find({ user: user._id });
+
+    const collections = await Collection.find({ user: user._id });
+    const result = await Promise.all(
+        collections.map(async(collection) => {
+            let scrap = false;
+
+            // 해당 게시물 컬렉션에 스크랩되어 있는지
+            if (collection.posts.includes(postId)) {
+                scrap = true;
+            }                
+            
+            return {collection, scrap};
+        })
+    );
     res.json(result);
 }));
 
