@@ -224,7 +224,7 @@ router.get('/scraps', passport.authenticate('jwt', {session: false}), asyncHandl
                                                   populate: {path: 'user', select: 'nickname profileImage introduction'}});
   res.json(await Promise.all(
     collections.map(async(collection) => {
-      let result = { name: collection.name };
+      let result = { collectionId: collection._id, name: collection.name };
       result.posts = await Promise.all(
         collection.posts.map(async(post) => {   
           let likeState = false;
