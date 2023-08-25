@@ -1,11 +1,16 @@
 const request = require('request');
-const convert = require('xml-js');
 
 // 공공 API에서 관광지 정보 받아오기
-const url = 'http://api.data.go.kr/openapi/tn_pubr_public_trrsrt_api';
-const serviceKey = 'lzQ%2BGyumiJBpbEBhDNX6WO9WoTJ7leGpYVrHXLhNQiYI1eoBlgLWcuIp%2FMp02Vdnv4PIIKHgsksULew1PYczyg%3D%3D';
+const url = 'https://apis.data.go.kr/B551011/PhotoGalleryService1/galleryList1';
+const serviceKey = process.env.SERVICE_KEY;
 var queryParams = '?' + encodeURIComponent('serviceKey') + '=' + serviceKey;
-queryParams += '&' + encodeURIComponent('numOfRows') + '=' + encodeURIComponent('1000');
+queryParams += '&' + encodeURIComponent('numOfRows') + '=' + encodeURIComponent('10000');
+queryParams += '&' + encodeURIComponent('pageNo') + '=' + encodeURIComponent('1');
+queryParams += '&' + encodeURIComponent('MobileOS') + '=' + encodeURIComponent('ETC');
+queryParams += '&' + encodeURIComponent('MobileApp') + '=' + encodeURIComponent('AppTest');
+queryParams += '&' + encodeURIComponent('arrange') + '=' + encodeURIComponent('A');
+// queryParams += '&' + encodeURIComponent('keyword') + '=' + encodeURIComponent('서울');
+queryParams += '&' + encodeURIComponent('_type') + '=' + encodeURIComponent('json');
 
 var tourData = [];
 
@@ -16,18 +21,18 @@ request({
     if(error) {
         console.log(error)
     }
-    // xml파일 Json 형태 변환 후 파싱
-    var xmlToJson = convert.xml2json(body, {compact: true, spaces: 4});
-    var parsedJson = JSON.parse(xmlToJson);
 
-    // 관광지명, 위치, 소개 정보
+    var parsedJson = JSON.parse(response.body);
+
     for(i in parsedJson['response']['body']['items']['item']) {
-        tourData.push({
-            name : parsedJson['response']['body']['items']['item'][i]['trrsrtNm']['_text'],
-            location : parsedJson['response']['body']['items']['item'][i]['rdnmadr']['_text'],
-            introduction : parsedJson['response']['body']['items']['item'][i]['trrsrtIntrcn']['_text']
-        })
-    }
+                tourData.push({
+                    name : parsedJson['response']['body']['items']['item'][i]['galTitle'],
+                    location : parsedJson['response']['body']['items']['item'][i]['galPhotographyLocation'],
+                    img : parsedJson['response']['body']['items']['item'][i]['galWebImageUrl']
+                })
+            }
+    console.log(tourData);
+
 });
 
 module.exports = tourData;
