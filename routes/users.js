@@ -178,7 +178,11 @@ router.get('/posts', passport.authenticate('jwt', {session: false}), asyncHandle
     return res.status(statusCode.NOT_FOUND).json({error: "존재하지 않는 회원입니다."});
   }
 
-  const posts = await Post.find({user: user._id}).populate('user', 'nickname profileImage introduction').sort({createdAt: -1});
+  const posts = await Post.find({user: user._id})
+    .populate('user', 'nickname profileImage introduction')
+    .sort({createdAt: -1})
+    .lean();
+
   res.json(await Promise.all(
     posts.map(async(post) => {   
         let likeState = false;
@@ -207,7 +211,10 @@ router.get('/comments', passport.authenticate('jwt', {session: false}), asyncHan
     return res.status(statusCode.NOT_FOUND).json({error: "존재하지 않는 회원입니다."});
   }
 
-  const comments = await Comment.find({user: user._id}).populate('post', 'title').sort({createdAt: -1});
+  const comments = await Comment.find({user: user._id})
+    .populate('post', 'title')
+    .sort({createdAt: -1})
+    .lean();
   res.json(comments);
 }))
 
@@ -220,8 +227,9 @@ router.get('/scraps', passport.authenticate('jwt', {session: false}), asyncHandl
   }
 
   const collections = await Collection.find({user: user._id}).sort({createdAt: -1})
-                                        .populate({path: 'posts', options: { sort: { 'createdAt': -1 } }, 
-                                                  populate: {path: 'user', select: 'nickname profileImage introduction'}});
+    .populate({path: 'posts', options: { sort: { 'createdAt': -1 } }, 
+              populate: {path: 'user', select: 'nickname profileImage introduction'}})
+    .lean();
   res.json(await Promise.all(
     collections.map(async(collection) => {
       let result = { collectionId: collection._id, name: collection.name };

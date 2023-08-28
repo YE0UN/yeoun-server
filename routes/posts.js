@@ -56,7 +56,7 @@ router.get('/', passport.authenticate(['jwt', 'anonymous'], { session: false }),
                             {title: {$regex: new RegExp(`${keyword}`, "i"), }},
                             {content: {$regex: new RegExp(`${keyword}`, "i"), }}
                         ],
-                    }).populate('user', 'nickname profileImage introduction').sort({createdAt: -1}).skip((page - 1) * perPage).limit(perPage);
+                    }).populate('user', 'nickname profileImage introduction').sort({createdAt: -1}).skip((page - 1) * perPage).limit(perPage).lean();
                     break;
                     
                 case "comment":
@@ -66,7 +66,7 @@ router.get('/', passport.authenticate(['jwt', 'anonymous'], { session: false }),
                             {title: {$regex: new RegExp(`${keyword}`, "i"), }},
                             {content: {$regex: new RegExp(`${keyword}`, "i"), }}
                         ],
-                    }).populate('user', 'nickname profileImage introduction').sort({commentCount: -1, createdAt: -1}).skip((page - 1) * perPage).limit(perPage);
+                    }).populate('user', 'nickname profileImage introduction').sort({commentCount: -1, createdAt: -1}).skip((page - 1) * perPage).limit(perPage).lean();
                     break;
     
                 case "like":
@@ -76,7 +76,7 @@ router.get('/', passport.authenticate(['jwt', 'anonymous'], { session: false }),
                             {title: {$regex: new RegExp(`${keyword}`, "i"), }},
                             {content: {$regex: new RegExp(`${keyword}`, "i"), }}
                         ],
-                    }).populate('user', 'nickname profileImage introduction').sort({likeCount: -1, createdAt: -1}).skip((page - 1) * perPage).limit(perPage);
+                    }).populate('user', 'nickname profileImage introduction').sort({likeCount: -1, createdAt: -1}).skip((page - 1) * perPage).limit(perPage).lean();
                     break;
             }
             result = await Promise.all(
@@ -121,7 +121,7 @@ router.get('/', passport.authenticate(['jwt', 'anonymous'], { session: false }),
                 {title: {$regex: new RegExp(`${keyword}`, "i"), }},
                 {content: {$regex: new RegExp(`${keyword}`, "i"), }}
             ],
-        }).populate('user', 'nickname profileImage introduction').skip((page - 1) * perPage).limit(perPage);       
+        }).populate('user', 'nickname profileImage introduction').skip((page - 1) * perPage).limit(perPage).lean();       
         result = await Promise.all(
             posts.map(async(post) => {
     
@@ -159,19 +159,19 @@ router.get('/', passport.authenticate(['jwt', 'anonymous'], { session: false }),
                 case "createdAt": 
                     posts = await Post.find({
                         region: region,
-                    }).populate('user', 'nickname profileImage introduction').sort({createdAt: -1}).skip((page - 1) * perPage).limit(perPage);
+                    }).populate('user', 'nickname profileImage introduction').sort({createdAt: -1}).skip((page - 1) * perPage).limit(perPage).lean();
                     break;
                     
                 case "comment":
                     posts = await Post.find({
                         region: region,
-                    }).populate('user', 'nickname profileImage introduction').sort({commentCount: -1, createdAt: -1}).skip((page - 1) * perPage).limit(perPage);
+                    }).populate('user', 'nickname profileImage introduction').sort({commentCount: -1, createdAt: -1}).skip((page - 1) * perPage).limit(perPage).lean();
                     break;
     
                 case "like":
                     posts = await Post.find({
                         region: region,
-                    }).populate('user', 'nickname profileImage introduction').sort({likeCount: -1, createdAt: -1}).skip((page - 1) * perPage).limit(perPage);
+                    }).populate('user', 'nickname profileImage introduction').sort({likeCount: -1, createdAt: -1}).skip((page - 1) * perPage).limit(perPage).lean();
                     break;
             }
             result = await Promise.all(
@@ -205,7 +205,7 @@ router.get('/', passport.authenticate(['jwt', 'anonymous'], { session: false }),
 
         posts = await Post.find({
             region: region,
-        }).populate('user', 'nickname profileImage introduction').skip((page - 1) * perPage).limit(perPage);
+        }).populate('user', 'nickname profileImage introduction').skip((page - 1) * perPage).limit(perPage).lean();
         result = await Promise.all(
             posts.map(async(post) => {
     
@@ -249,7 +249,7 @@ router.get('/', passport.authenticate(['jwt', 'anonymous'], { session: false }),
                             {title: {$regex: new RegExp(`${keyword}`, "i"), }},
                             {content: {$regex: new RegExp(`${keyword}`, "i"), }}
                         ],
-                    }).populate('user', 'nickname profileImage introduction').sort({createdAt: -1}).skip((page - 1) * perPage).limit(perPage);
+                    }).populate('user', 'nickname profileImage introduction').sort({createdAt: -1}).skip((page - 1) * perPage).limit(perPage).lean();
                     break;
                     
                 case "comment":
@@ -258,7 +258,7 @@ router.get('/', passport.authenticate(['jwt', 'anonymous'], { session: false }),
                             {title: {$regex: new RegExp(`${keyword}`, "i"), }},
                             {content: {$regex: new RegExp(`${keyword}`, "i"), }}
                         ],
-                    }).populate('user', 'nickname profileImage introduction').sort({commentCount: -1, createdAt: -1}).skip((page - 1) * perPage).limit(perPage);
+                    }).populate('user', 'nickname profileImage introduction').sort({commentCount: -1, createdAt: -1}).skip((page - 1) * perPage).limit(perPage).lean();
                     break;
     
                 case "like":
@@ -267,7 +267,7 @@ router.get('/', passport.authenticate(['jwt', 'anonymous'], { session: false }),
                             {title: {$regex: new RegExp(`${keyword}`, "i"), }},
                             {content: {$regex: new RegExp(`${keyword}`, "i"), }}
                         ],
-                    }).populate('user', 'nickname profileImage introduction').sort({likeCount: -1, createdAt: -1}).skip((page - 1) * perPage).limit(perPage);
+                    }).populate('user', 'nickname profileImage introduction').sort({likeCount: -1, createdAt: -1}).skip((page - 1) * perPage).limit(perPage).lean();
                     break;
             }
             result = await Promise.all(
@@ -307,7 +307,7 @@ router.get('/', passport.authenticate(['jwt', 'anonymous'], { session: false }),
                 {title: {$regex: new RegExp(`${keyword}`, "i"), }},
                 {content: {$regex: new RegExp(`${keyword}`, "i"), }}
             ],
-        }).populate('user', 'nickname profileImage introduction').skip((page - 1) * perPage).limit(perPage);
+        }).populate('user', 'nickname profileImage introduction').skip((page - 1) * perPage).limit(perPage).lean();
         result = await Promise.all(
             posts.map(async(post) => {
     
@@ -326,7 +326,7 @@ router.get('/', passport.authenticate(['jwt', 'anonymous'], { session: false }),
         );
         result.push({currentPage, maxPage});
         return res.json(result);
-}
+    }
     // 정렬 (최신순, 인기순, 댓글순)
     if (sort) {
         countPosts = await Post.countDocuments();
@@ -339,15 +339,15 @@ router.get('/', passport.authenticate(['jwt', 'anonymous'], { session: false }),
 
         switch (sort) {
             case "createdAt": 
-                posts = await Post.find().populate('user', 'nickname profileImage introduction').sort({createdAt: -1}).skip((page - 1) * perPage).limit(perPage);
+                posts = await Post.find().populate('user', 'nickname profileImage introduction').sort({createdAt: -1}).skip((page - 1) * perPage).limit(perPage).lean();
                 break;
                 
             case "comment":
-                posts = await Post.find().populate('user', 'nickname profileImage introduction').sort({commentCount: -1, createdAt: -1}).skip((page - 1) * perPage).limit(perPage);
+                posts = await Post.find().populate('user', 'nickname profileImage introduction').sort({commentCount: -1, createdAt: -1}).skip((page - 1) * perPage).limit(perPage).lean();
                 break;
 
             case "like":
-                posts = await Post.find().populate('user', 'nickname profileImage introduction').sort({likeCount: -1, createdAt: -1}).skip((page - 1) * perPage).limit(perPage);
+                posts = await Post.find().populate('user', 'nickname profileImage introduction').sort({likeCount: -1, createdAt: -1}).skip((page - 1) * perPage).limit(perPage).lean();
                 break;
         }
         result = await Promise.all(
@@ -368,7 +368,7 @@ router.get('/', passport.authenticate(['jwt', 'anonymous'], { session: false }),
         );
         result.push({currentPage, maxPage});
         return res.json(result);
-}
+    }
     // 모든 게시물 
     countPosts = await Post.countDocuments();
     maxPage = Math.ceil(countPosts / perPage);
@@ -378,7 +378,7 @@ router.get('/', passport.authenticate(['jwt', 'anonymous'], { session: false }),
         return res.json({error: "페이지 없음"});
     }
 
-    posts = await Post.find().populate('user', 'nickname profileImage introduction').skip((page - 1) * perPage).limit(perPage);
+    posts = await Post.find().populate('user', 'nickname profileImage introduction').skip((page - 1) * perPage).limit(perPage).lean();
     result = await Promise.all(
         posts.map(async(post) => {   
             let likeState = false;
@@ -414,7 +414,8 @@ router.get('/:postId', passport.authenticate('jwt', {session: false}), asyncHand
                                         path: 'user',
                                         select: 'nickname profileImage introduction'
                                     }
-                                });
+                                })
+                                .lean();
     // 게시물 찾기 실패
     if (!post) {
         res.status(statusCode.NOT_FOUND);
