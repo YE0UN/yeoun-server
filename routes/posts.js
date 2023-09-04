@@ -29,6 +29,12 @@ router.get('/', passport.authenticate(['jwt', 'anonymous'], { session: false }),
         return res.json({error: "페이지 없음"});
     }
     
+    // 지역 선택 시 빈 값일 때
+    if (region === '') {
+        res.status(statusCode.BAD_REQUEST);
+        return res.json({error: "지역이 선택되지 않음"});
+    }
+
     // 지역별 & 검색별
     if (region && keyword) {
         // + 정렬
@@ -326,7 +332,7 @@ router.get('/', passport.authenticate(['jwt', 'anonymous'], { session: false }),
         );
         result.push({currentPage, maxPage});
         return res.json(result);
-}
+    }
     // 정렬 (최신순, 인기순, 댓글순)
     if (sort) {
         countPosts = await Post.countDocuments();
@@ -368,7 +374,7 @@ router.get('/', passport.authenticate(['jwt', 'anonymous'], { session: false }),
         );
         result.push({currentPage, maxPage});
         return res.json(result);
-}
+    }
     // 모든 게시물 
     countPosts = await Post.countDocuments();
     maxPage = Math.ceil(countPosts / perPage);
