@@ -13,8 +13,7 @@ router.get('/:postId', passport.authenticate('jwt', {session: false}), asyncHand
     const { postId } = req.params;
     const user = req.user;
 
-    const collections = await Collection.find({ user: user._id })
-        .lean();
+    const collections = await Collection.find({ user: user._id });
     const result = await Promise.all(
         collections.map(async(collection) => {
             let scrap = false;
