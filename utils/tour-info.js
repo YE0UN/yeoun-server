@@ -9,7 +9,6 @@ queryParams += '&' + encodeURIComponent('pageNo') + '=' + encodeURIComponent('1'
 queryParams += '&' + encodeURIComponent('MobileOS') + '=' + encodeURIComponent('ETC');
 queryParams += '&' + encodeURIComponent('MobileApp') + '=' + encodeURIComponent('AppTest');
 queryParams += '&' + encodeURIComponent('arrange') + '=' + encodeURIComponent('A');
-// queryParams += '&' + encodeURIComponent('keyword') + '=' + encodeURIComponent('서울');
 queryParams += '&' + encodeURIComponent('_type') + '=' + encodeURIComponent('json');
 
 var tourData = [];
@@ -31,7 +30,6 @@ request({
                     img : parsedJson['response']['body']['items']['item'][i]['galWebImageUrl']
                 })
             }
-    console.log(tourData);
 
 });
 
