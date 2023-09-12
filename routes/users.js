@@ -89,7 +89,7 @@ router.delete('/delete', passport.authenticate('jwt', {session: false}), asyncHa
   const user = req.user;
   // 내가 만든 컬렉션만 삭제
   await Collection.deleteMany({ user: user._id });
-  // 게시물, 댓글, 좋아요의 user를 null로
+  // 게시물, 댓글의 user를 null로
   const posts = await Post.find({ user: user._id });
   posts.map(async (post) => {
       post.user = null;
@@ -99,11 +99,6 @@ router.delete('/delete', passport.authenticate('jwt', {session: false}), asyncHa
   comments.map(async (comment) => {
       comment.user = null;
       await comment.save();
-  });
-  const likes = await Like.find({ user: user._id });
-  likes.map(async (like) => {
-      like.user = null;
-      await like.save();
   });
   await User.deleteOne(user);
 
