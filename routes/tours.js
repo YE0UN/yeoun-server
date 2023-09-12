@@ -12,7 +12,6 @@ router.get('/', asyncHandler(async (req, res) => {
     const filteredTours = region
         ? tourInfo.filter((tour) => {
             const location = JSON.stringify(tour.location).split(' ')[0];
-            console.log(location);
             return location.includes(region);
         })
         : null;
