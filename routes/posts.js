@@ -1,6 +1,8 @@
 const { Router } = require('express');
 const router = Router();
 const passport = require('passport');
+const moment = require('moment');
+require('moment/locale/ko');
 
 const Post = require('../models/Post');
 const User = require('../models/User');
@@ -411,7 +413,7 @@ router.get('/:postId', passport.authenticate('jwt', {session: false}), asyncHand
     let likeState = false;
     let scrap = false;
 
-    const post = await Post.findById(postId)
+    let post = await Post.findById(postId)
                                 .populate('user', 'nickname profileImage introduction')
                                 .populate({
                                     path: 'comments',
@@ -422,11 +424,17 @@ router.get('/:postId', passport.authenticate('jwt', {session: false}), asyncHand
                                     }
                                 })
                                 .lean();
+
     // 게시물 찾기 실패
     if (!post) {
         res.status(statusCode.NOT_FOUND);
         return res.json({error: "해당 게시물 없음"});
     }
+
+    // 댓글 시간 변환 (ex. 몇 시간 전)
+    post.comments.map(async(comment) => {
+        comment.createdAt = moment(comment.createdAt).fromNow();
+    });
 
     // 유저의 좋아요 여부
     if (await Like.exists({user: user._id, post: postId})) {
