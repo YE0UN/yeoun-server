@@ -7,22 +7,18 @@ const asyncHandler = require('../utils/async-handler');
 
 router.get('/', asyncHandler(async (req, res) => {
     const {region} = req.query;
-    var result = [];
 
-    // 전체 관광지 정보
-    if(!region) {
-        return res.json(tourInfo);
-    }
+    // 조건을 만족하는 관광지만 필터링
+    const filteredTours = region
+        ? tourInfo.filter((tour) => {
+            const location = JSON.stringify(tour.location).split(' ')[0];
+            console.log(location);
+            return location.includes(region);
+        })
+        : null;
 
-    // 지역별 관광지 정보
-    tourInfo.forEach(await function (tour) {
-        if (JSON.stringify(tour).split(' ')[0].includes(region)) {
-
-            result.push(tour);
-        }
-    });
-    
-    res.json(result);
+    res.json(filteredTours || tourInfo);
   }));
+
 
 module.exports = router;
