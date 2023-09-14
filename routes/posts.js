@@ -432,7 +432,7 @@ router.get('/:postId', passport.authenticate('jwt', {session: false}), asyncHand
     }
 
     // 댓글 시간 변환 (ex. 몇 시간 전)
-    post.comments.map(async(comment) => {
+    post.comments.map((comment) => {
         comment.createdAt = moment(comment.createdAt).fromNow();
     });
 
