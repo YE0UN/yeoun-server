@@ -81,10 +81,10 @@ router.delete('/:commentId', passport.authenticate('jwt', {session: false}), asy
         return res.json({error: "존재하지 않는 회원입니다."});
     }
 
-    // 댓글 작성자와 로그인 유저 일치하는지
-    if (!comment.user.equals(user._id)) {
+    // 탈퇴한 회원의 댓글인지 + 댓글 작성자와 로그인 유저 일치하는지
+    if (!comment.user || !comment.user.equals(user._id)) {
         res.status(statusCode.FORBIDDEN);
-        return res.json({error: "삭제할 수 없음"});
+        return res.json({error: "삭제할 권한이 없습니다."});
     }
 
     // Post 댓글 업데이트
