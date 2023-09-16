@@ -3,6 +3,3 @@ node_modules/
 
 # dotenv environment variable files
 .env
-
-# IntellJ diretories
-.idea
