@@ -387,14 +387,8 @@ router.put('/:postId', passport.authenticate('jwt', {session: false}),  asyncHan
         return res.json({error: "존재하지 않는 회원입니다."});
     }
 
-    // 탈퇴한 회원의 게시물인 경우
-    if (!post.user) {
-        res.status(statusCode.UNAUTHORIZED);
-        return res.json({error: "수정할 수 없는 게시물입니다."});
-    }
-
-    // 게시물 작성자와 로그인 유저 일치하는지
-    if (!post.user.equals(user._id)) {
+    // 탈퇴한 회원의 게시물인지 + 게시물 작성자와 로그인 유저 일치하는지
+    if (!post.user || !post.user.equals(user._id)) {
         res.status(statusCode.FORBIDDEN);
         return res.json({error: "수정할 권한이 없습니다."});
     }
@@ -443,14 +437,8 @@ router.delete('/:postId', passport.authenticate('jwt', {session: false}), asyncH
         return res.json({error: "존재하지 않는 회원입니다."});
     }
 
-    // 탈퇴한 회원의 게시물인 경우
-    if (!post.user) {
-        res.status(statusCode.UNAUTHORIZED);
-        return res.json({error: "삭제할 수 없는 게시물입니다."});
-    }
-
-    // 게시물 작성자와 로그인 유저 일치하는지
-    if (!post.user.equals(user._id)) {
+    // 탈퇴한 회원의 게시물인지 + 게시물 작성자와 로그인 유저 일치하는지
+    if (!post.user || !post.user.equals(user._id)) {
         res.status(statusCode.FORBIDDEN);
         return res.json({error: "삭제할 권한이 없습니다."});
     }
