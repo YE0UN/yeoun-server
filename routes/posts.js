@@ -77,7 +77,7 @@ router.get('/', passport.authenticate(['jwt', 'anonymous'], { session: false }),
                     {title: {$regex: new RegExp(`${keyword}`, "i"), }},
                     {content: {$regex: new RegExp(`${keyword}`, "i"), }}
                 ],
-            }).populate('user', 'nickname profileImage introduction').sort({[sort]: -1}).skip((page - 1) * perPage).limit(perPage).lean();
+            }).populate('user', 'nickname profileImage introduction').sort({[sort]: -1, "createdAt": -1}).skip((page - 1) * perPage).limit(perPage).lean();
         }
         else {
             posts = await Post.find({
@@ -130,7 +130,7 @@ router.get('/', passport.authenticate(['jwt', 'anonymous'], { session: false }),
         if (sort) {  
             posts = await Post.find({
                 region: region,
-            }).populate('user', 'nickname profileImage introduction').sort({[sort]: -1}).skip((page - 1) * perPage).limit(perPage).lean();
+            }).populate('user', 'nickname profileImage introduction').sort({[sort]: -1, "createdAt": -1}).skip((page - 1) * perPage).limit(perPage).lean();
         }
         else {
             posts = await Post.find({
@@ -185,7 +185,7 @@ router.get('/', passport.authenticate(['jwt', 'anonymous'], { session: false }),
                     {title: {$regex: new RegExp(`${keyword}`, "i"), }},
                     {content: {$regex: new RegExp(`${keyword}`, "i"), }}
                 ],
-            }).populate('user', 'nickname profileImage introduction').sort({[sort]: -1}).skip((page - 1) * perPage).limit(perPage).lean();
+            }).populate('user', 'nickname profileImage introduction').sort({[sort]: -1, "createdAt": -1}).skip((page - 1) * perPage).limit(perPage).lean();
         }
         else {
             posts = await Post.find({
@@ -226,7 +226,7 @@ router.get('/', passport.authenticate(['jwt', 'anonymous'], { session: false }),
             return res.json({error: "페이지 초과"});
         }
 
-        posts = await Post.find().populate('user', 'nickname profileImage introduction').sort({[sort]: -1}).skip((page - 1) * perPage).limit(perPage).lean();
+        posts = await Post.find().populate('user', 'nickname profileImage introduction').sort({[sort]: -1, "createdAt": -1}).skip((page - 1) * perPage).limit(perPage).lean();
 
         // 좋아요 및 스크랩 여부
         result = await Promise.all(
