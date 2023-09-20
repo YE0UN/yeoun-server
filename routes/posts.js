@@ -304,11 +304,16 @@ router.get('/:postId', passport.authenticate('jwt', {session: false}), asyncHand
         return res.json({error: "해당 게시물 없음"});
     }
 
-    // 댓글 시간 변환 (ex. 몇 시간 전)
+    // 초, 분, 시간 단위 바뀌는 기준 설정
+    moment.relativeTimeThreshold('s', 60);
+    moment.relativeTimeThreshold('m', 60);
+    moment.relativeTimeThreshold('h', 24);
+    // 댓글 시간 형식 변환 (하루 지나기 전: '몇 초/분/시간 전', 하루 지난 이후: '년 월 일')
     post.comments.map((comment) => {
-        comment.createdAt = moment(comment.createdAt).fromNow();
+        comment.createdAt = (moment().diff(moment(comment.createdAt), 'days') >= 1) ? 
+            moment(comment.createdAt).format('YYYY년 MM월 DD일') : moment(comment.createdAt).fromNow();
     });
-
+    
     // 유저의 좋아요 여부
     if (await Like.exists({user: user._id, post: postId})) {
         likeState = true;
