@@ -48,9 +48,14 @@ router.post('/', passport.authenticate('jwt', {session: false}), asyncHandler(as
     }
 
     // 필수 작성 validation + 공백 막기
-    if (!name.trim()) {
+    if (!!!name?.trim()) {
         res.status(statusCode.BAD_REQUEST);
         return res.json({error: "이름을 입력하세요."});
+    }
+
+    // 이름 중복 확인
+    if (await Collection.exists({user: user._id, name})) {
+        return res.status(statusCode.CONFLICT).json({error: "이미 사용 중인 이름입니다."});
     }
 
     const collection = await Collection.create({
@@ -94,9 +99,14 @@ router.put('/:collectionId', passport.authenticate('jwt', {session: false}), asy
     }
 
     // 필수 작성 validation + 공백 막기
-    if (!name.trim()) {
+    if (!!!name?.trim()) {
         res.status(statusCode.BAD_REQUEST);
         return res.json({error: "이름을 입력하세요."});
+    }
+
+    // 이름 중복 확인
+    if (await Collection.exists({user: user._id, name})) {
+        return res.status(statusCode.CONFLICT).json({error: "이미 사용 중인 이름입니다."});
     }
 
     collection.name = name;

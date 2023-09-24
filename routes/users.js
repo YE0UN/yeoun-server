@@ -2,6 +2,8 @@ const { Router } = require('express');
 const router = Router();
 const jwt = require('jsonwebtoken');
 const passport = require('passport');
+const moment = require('moment');
+require('moment/locale/ko');
 require('dotenv').config();
 
 const User = require('../models/User');
@@ -206,10 +208,20 @@ router.get('/comments', passport.authenticate('jwt', {session: false}), asyncHan
     return res.status(statusCode.NOT_FOUND).json({error: "존재하지 않는 회원입니다."});
   }
 
-  const comments = await Comment.find({user: user._id})
+  let comments = await Comment.find({user: user._id}, {updatedAt: 0})
     .populate('post', 'title')
     .sort({createdAt: -1})
     .lean();
+  
+  // 댓글 작성시간 형식 변환
+  moment.relativeTimeThreshold('s', 60);
+  moment.relativeTimeThreshold('m', 60);
+  moment.relativeTimeThreshold('h', 24);
+  comments.map((comment) => {
+    comment.createdAt = (moment().diff(moment(comment.createdAt), 'days') >= 1) ? 
+      moment(comment.createdAt).format('YYYY년 MM월 DD일') : moment(comment.createdAt).fromNow();
+  });
+
   res.json(comments);
 }))
 
