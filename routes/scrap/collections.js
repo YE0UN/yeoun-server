@@ -54,7 +54,7 @@ router.post('/', passport.authenticate('jwt', {session: false}), asyncHandler(as
     }
 
     // 이름 중복 확인
-    if (await Collection.exists({name})) {
+    if (await Collection.exists({user: user._id, name})) {
         return res.status(statusCode.CONFLICT).json({error: "이미 사용 중인 이름입니다."});
     }
 
@@ -105,7 +105,7 @@ router.put('/:collectionId', passport.authenticate('jwt', {session: false}), asy
     }
 
     // 이름 중복 확인
-    if (await Collection.exists({name})) {
+    if (await Collection.exists({user: user._id, name})) {
         return res.status(statusCode.CONFLICT).json({error: "이미 사용 중인 이름입니다."});
     }
 
