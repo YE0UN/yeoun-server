@@ -13,9 +13,13 @@ const regionMapping = {
     '경북': '경상북도',
     '경남': '경상남도'
 };
+const pageSize = 10;
 
 router.get('/', asyncHandler(async (req, res) => {
-    const {region} = req.query;
+    const {region, page} = req.query;
+    const pageNumber = parseInt(page) || 1; // 페이지 번호 없거나 유효하지 않은 값이면 1로 설정
+    const currentPage = pageNumber;
+    let result =[];
 
     // 지역 미선택 시 에러
     if (!region) {
@@ -36,7 +40,21 @@ router.get('/', asyncHandler(async (req, res) => {
         return location.includes(region) || location.includes(mappedRegion);
     });
 
-    res.json(filteredTours);
+    // 페이지네이션
+    const startIndex = (pageNumber - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    const paginatedTours = filteredTours.slice(startIndex, endIndex);
+    const maxPage = Math.ceil(filteredTours.length / pageSize);
+
+
+    if(currentPage > maxPage) {
+        return res.status(statusCode.BAD_REQUEST).json({error: "페이지 초과"});
+    }
+    result.push({currentPage, maxPage});
+    result.push(paginatedTours);
+
+
+    res.json(result);
 }));
 
 module.exports = router;
