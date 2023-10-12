@@ -13,7 +13,7 @@ const regionMapping = {
     '경북': '경상북도',
     '경남': '경상남도'
 };
-const pageSize = 10;
+const pageSize = 12;
 
 router.get('/', asyncHandler(async (req, res) => {
     const {region, page} = req.query;
