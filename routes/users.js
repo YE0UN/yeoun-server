@@ -72,7 +72,11 @@ router.post('/signin/token', asyncHandler(async (req, res) => {
           // 유저 jwt 생성 - jwt.sign('token 내용', 'JWT secretkey')
           const token = jwt.sign({id: user._id}, process.env.JWT_SECRET, {expiresIn: '1 year'});
           // 토큰 쿠키로 전달
-          res.cookie('token', token);
+          res.cookie('token', token, {
+            sameSite: "None",     // SameSite 설정
+            secure: true,         // HTTPS에서만 전송
+            httpOnly: true,       // JavaScript에서 접근 불가
+          });
           return res.json({user, token});
       });
   })(req, res);
