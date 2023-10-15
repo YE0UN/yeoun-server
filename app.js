@@ -32,7 +32,7 @@ app.use(express.urlencoded({limit: '100mb', extended: false}));
 
 // cors 처리
 app.use(cors({
-  origin: "http://localhost:3000",  // 접근 권한을 부여하는 도메인
+  origin: ["http://localhost:3000", "https://yeoun.netlify.app"],  // 접근 권한을 부여하는 도메인
   credentials: true,                // 요청에 쿠키 포함시키도록 허용
   allowedHeaders: "Content-Type"    // 허용할 HTTP 헤더 지정
 }));
