@@ -75,7 +75,7 @@ router.post('/signin/token', asyncHandler(async (req, res) => {
           res.cookie('token', token, {
             sameSite: "None",     // SameSite 설정
             secure: true,         // HTTPS에서만 전송
-            httpOnly: true,       // JavaScript에서 접근 불가
+            httpOnly: false,       
           });
           return res.json({user, token});
       });
@@ -84,9 +84,10 @@ router.post('/signin/token', asyncHandler(async (req, res) => {
 
 // 로그아웃 (쿠키 삭제)
 router.post('/logout', passport.authenticate('jwt', {session: false}), asyncHandler(async (req, res) => {
-  res.cookie('token', null, {
-    maxAge: 0,
-  });
+  // res.cookie('token', null, {
+  //   maxAge: 0,
+  // });
+  res.clearCookie("token", { domain: "yeoun-402216.du.r.appspot.com", path: "/" });
   res.json({message: '로그아웃 성공'});
 }));
 
@@ -109,9 +110,10 @@ router.delete('/delete', passport.authenticate('jwt', {session: false}), asyncHa
   await User.deleteOne(user);
 
   // 쿠키 삭제
-  res.cookie('token', null, {
-    maxAge: 0,
-  });
+  // res.cookie('token', null, {
+  //   maxAge: 0,
+  // });
+  res.clearCookie("token", { domain: "yeoun-402216.du.r.appspot.com", path: "/" });
   res.json({message: '탈퇴 성공'});
 }))
 
